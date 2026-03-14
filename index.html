@@ -1,0 +1,990 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Mysteryx GDPS | Official Global List</title>
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@900&family=Poppins:wght@400;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css">
+    
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-app-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-database-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-auth-compat.js"></script>
+    <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
+
+    <style>
+        :root {
+            --bg: #0b0c10;
+            --card-bg: rgba(31, 40, 51, 0.7);
+            --main-grad: linear-gradient(135deg, #66fcf1 0%, #45a29e 100%);
+            --accent-cyan: #66fcf1;
+            --accent-dark: #1f2833;
+            --text-main: #c5c6c7;
+        }
+
+        * { box-sizing: border-box; scroll-behavior: smooth; -webkit-tap-highlight-color: transparent; }
+        body { margin: 0; font-family: 'Poppins', sans-serif; background: var(--bg); color: white; overflow-x: hidden; min-height: 100vh; display: flex; flex-direction: column; }
+
+        .bg-wrapper { position: fixed; top: 0; left: 0; width: 100%; height: 100%; z-index: -1; background: var(--bg); overflow: hidden; }
+        .grid-overlay {
+            position: absolute; width: 200%; height: 200%; top: -50%; left: -50%;
+            background-image: linear-gradient(rgba(102, 252, 241, 0.05) 1px, transparent 1px),
+                              linear-gradient(90deg, rgba(102, 252, 241, 0.05) 1px, transparent 1px);
+            background-size: 60px 60px;
+            transform: perspective(600px) rotateX(60deg);
+            animation: gridMove 20s linear infinite;
+        }
+        @keyframes gridMove { from { transform: perspective(600px) rotateX(60deg) translateY(0); } to { transform: perspective(600px) rotateX(60deg) translateY(60px); } }
+        .orb { position: absolute; border-radius: 50%; filter: blur(120px); opacity: 0.15; animation: float 12s ease-in-out infinite; }
+        .orb-1 { width: 600px; height: 600px; background: #66fcf1; top: -10%; left: -10%; }
+        .orb-2 { width: 500px; height: 500px; background: #45a29e; bottom: -10%; right: -10%; animation-delay: -6s; }
+        @keyframes float { 0%, 100% { transform: translate(0, 0); } 50% { transform: translate(30px, 40px); } }
+
+        .navbar { display: flex; justify-content: space-between; align-items: center; padding: 15px 6%; background: rgba(11, 12, 16, 0.85); backdrop-filter: blur(20px); position: fixed; width: 100%; top: 0; z-index: 1000; border-bottom: 1px solid rgba(102, 252, 241, 0.1); }
+        .logo { font-family: 'Montserrat'; font-size: 1.6rem; font-weight: 900; background: var(--main-grad); -webkit-background-clip: text; -webkit-text-fill-color: transparent; cursor: pointer; transition: 0.3s; letter-spacing: 1px; }
+        .logo:hover { transform: scale(1.05); filter: drop-shadow(0 0 10px rgba(102, 252, 241, 0.5)); }
+        .nav-links { display: flex; align-items: center; gap: 20px; }
+        
+        .nav-item { color: var(--text-main); text-decoration: none; font-weight: 700; transition: 0.3s; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.5px; cursor: pointer; background: none; border: none; padding: 0; font-family: 'Poppins', sans-serif; vertical-align: middle; line-height: 1;}
+        .nav-item:hover { color: #fff; text-shadow: 0 0 8px rgba(102, 252, 241, 0.6); }
+
+        .dropdown { position: relative; display: inline-block; }
+        .dropdown-content {
+            display: none; position: absolute; background-color: rgba(31, 40, 51, 0.95);
+            min-width: 160px; box-shadow: 0px 10px 30px 0px rgba(0,0,0,0.8);
+            z-index: 1001; border-radius: 12px; overflow: hidden;
+            border: 1px solid rgba(102, 252, 241, 0.2); top: calc(100% + 15px); left: 50%; transform: translateX(-50%);
+            backdrop-filter: blur(10px);
+        }
+        .dropdown-content.show { display: block; animation: fadeIn 0.2s ease; }
+        @keyframes fadeIn { from { opacity: 0; transform: translateX(-50%) translateY(-10px); } to { opacity: 1; transform: translateX(-50%) translateY(0); } }
+        .dropdown-content a { color: var(--text-main); padding: 14px 16px; text-decoration: none; display: block; text-align: center; font-size: 0.85rem; text-transform: uppercase; font-weight: 700; transition: 0.3s; cursor: pointer;}
+        .dropdown-content a:hover { background-color: rgba(102, 252, 241, 0.1); color: var(--accent-cyan); }
+
+        .btn-download-nav {
+            background: #22c55e; color: #fff !important;
+            padding: 10px 20px; border-radius: 10px; font-weight: 900; transition: 0.3s;
+            display: flex; align-items: center; gap: 8px; border: none; cursor: pointer; font-family: 'Poppins', sans-serif;
+            text-transform: uppercase; font-size: 0.85rem;
+        }
+        .btn-download-nav:hover { box-shadow: 0 0 20px rgba(34, 197, 94, 0.5); transform: translateY(-2px); background: #16a34a; }
+
+        .nav-socials { display: flex; gap: 15px; align-items: center; margin-left: 10px; border-left: 1px solid rgba(255,255,255,0.1); padding-left: 15px; }
+        .nav-socials a { font-size: 1.5rem; color: var(--text-main); transition: 0.3s; display: flex; align-items: center; justify-content: center; text-decoration: none; }
+        .nav-socials a.tg-icon:hover { color: #00a2ed; transform: scale(1.2) translateY(-2px); }
+        .nav-socials a.yt-icon:hover { color: #ff0000; transform: scale(1.2) translateY(-2px); }
+
+        .burger-btn {
+            display: none; flex-direction: column; justify-content: center; align-items: center;
+            width: 44px; height: 44px; background: rgba(102,252,241,0.07);
+            border: 1px solid rgba(102,252,241,0.25); border-radius: 10px;
+            cursor: pointer; gap: 5px; padding: 0; flex-shrink: 0;
+        }
+        .burger-btn span { display: block; width: 20px; height: 2px; background: var(--accent-cyan); border-radius: 2px; transition: 0.3s; }
+        .burger-btn.open span:nth-child(1) { transform: translateY(7px) rotate(45deg); }
+        .burger-btn.open span:nth-child(2) { opacity: 0; }
+        .burger-btn.open span:nth-child(3) { transform: translateY(-7px) rotate(-45deg); }
+
+        .mobile-menu {
+            display: none; position: fixed; top: 60px; left: 0; width: 100%;
+            background: rgba(11,12,16,0.97); backdrop-filter: blur(20px);
+            z-index: 999; border-bottom: 1px solid rgba(102,252,241,0.12);
+            padding: 14px; flex-direction: column; gap: 8px;
+            max-height: calc(100vh - 60px); overflow-y: auto;
+        }
+        .mobile-menu.open { display: flex; animation: mSlide 0.25s ease; }
+        @keyframes mSlide { from { opacity:0; transform:translateY(-6px); } to { opacity:1; transform:translateY(0); } }
+        .m-btn {
+            width: 100%; padding: 15px 18px; background: rgba(255,255,255,0.04);
+            border: 1px solid rgba(255,255,255,0.08); border-radius: 13px;
+            color: var(--text-main); font-weight: 700; font-size: 0.95rem;
+            text-transform: uppercase; cursor: pointer; font-family: 'Poppins', sans-serif;
+            text-align: left; transition: 0.2s; display: flex; align-items: center; gap: 12px;
+        }
+        .m-btn:active { background: rgba(102,252,241,0.1); color: var(--accent-cyan); border-color: rgba(102,252,241,0.3); }
+        .m-btn.green { background: #22c55e; color: #fff; border-color: transparent; }
+        .m-btn.green:active { background: #16a34a; }
+        .m-socials { display: flex; justify-content: center; gap: 28px; padding: 8px 0 4px; }
+        .m-socials a { font-size: 1.9rem; text-decoration: none; transition: 0.3s; }
+        .m-lang { align-self: center; background: none; border: 1px solid rgba(102,252,241,0.4); color: var(--accent-cyan); padding: 7px 22px; cursor: pointer; border-radius: 8px; font-weight: 700; font-family: 'Poppins', sans-serif; font-size: 0.9rem; }
+
+        .section-page { display: none; flex: 1; margin-top: 80px; padding-bottom: 50px; animation: fadeInPage 0.4s ease; }
+        .section-page.active { display: block; }
+        @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+
+        .welcome-hero { min-height: calc(100vh - 80px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
+        .welcome-hero h1 { font-family: 'Montserrat'; font-size: clamp(3rem, 8vw, 6rem); margin: 0; line-height: 1.1; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 10px 30px rgba(102, 252, 241, 0.3); }
+        .welcome-hero p { font-size: 1.15rem; color: var(--text-main); max-width: 700px; margin: 25px 0 40px; line-height: 1.7; }
+        .hero-btns { display: flex; gap: 20px; flex-wrap: wrap; justify-content: center; }
+        .btn-main { padding: 16px 40px; border-radius: 12px; background: #22c55e; color: #fff; text-decoration: none; font-weight: 900; font-size: 1rem; transition: 0.3s; border: none; cursor: pointer; font-family: 'Poppins'; text-transform: uppercase;}
+        .btn-outline { padding: 16px 40px; border-radius: 12px; border: 2px solid var(--accent-cyan); color: var(--accent-cyan); text-decoration: none; font-weight: 900; font-size: 1rem; transition: 0.3s; background: transparent; cursor: pointer; font-family: 'Poppins'; text-transform: uppercase;}
+        .btn-main:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4); background: #16a34a; }
+        .btn-outline:hover { background: var(--accent-cyan); color: #0b0c10; transform: translateY(-4px); box-shadow: 0 15px 35px rgba(102, 252, 241, 0.2); }
+
+        .download-container { max-width: 800px; margin: 40px auto; text-align: center; background: var(--card-bg); padding: 50px 30px; border-radius: 25px; border: 1px solid rgba(102, 252, 241, 0.15); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
+        .dl-title { font-family: 'Montserrat'; font-size: 3rem; margin-bottom: 10px; color: #fff; }
+        .dl-version { display: inline-block; background: rgba(102, 252, 241, 0.1); color: var(--accent-cyan); padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 1.1rem; margin-bottom: 40px; border: 1px solid rgba(102, 252, 241, 0.3); }
+        .dl-cards { display: flex; justify-content: center; gap: 30px; flex-wrap: wrap; }
+        .dl-card { flex: 1; min-width: 250px; background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(255,255,255,0.05); padding: 40px 20px; border-radius: 20px; transition: 0.3s; text-decoration: none; color: white; display: flex; flex-direction: column; align-items: center; }
+        .dl-card:hover { transform: translateY(-10px); border-color: var(--accent-cyan); background: rgba(11, 12, 16, 0.9); box-shadow: 0 15px 30px rgba(102, 252, 241, 0.15); }
+        .dl-icon { font-size: 4rem; margin-bottom: 20px; }
+        .dl-card.pc:hover .dl-icon { color: #00a1f1; }
+        .dl-card.android:hover .dl-icon { color: #3ddc84; }
+        .dl-name { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; font-family: 'Montserrat'; }
+        .dl-desc { font-size: 0.9rem; color: #888; font-weight: 400; }
+
+        .hero-title { width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 20px 30px; text-align: center; }
+        .hero-title h2 { font-family: 'Montserrat'; font-size: 2.8rem; margin: 0; text-transform: uppercase; letter-spacing: 3px; }
+        .top-50-text { color: var(--accent-cyan); font-family: 'Montserrat'; font-weight: 900; font-size: 1.5rem; margin-top: 5px; letter-spacing: 8px; text-shadow: 0 0 15px rgba(102, 252, 241, 0.5); }
+
+        .search-box { max-width: 600px; margin: 0 auto 40px; position: relative; padding: 0 20px; }
+        .search-modes { display: flex; justify-content: center; gap: 10px; margin-bottom: 20px; }
+        .search-mode-btn { background: rgba(255, 255, 255, 0.05); border: 1px solid rgba(255, 255, 255, 0.1); color: var(--text-main); padding: 10px 20px; border-radius: 10px; cursor: pointer; font-size: 0.85rem; font-weight: 700; transition: 0.3s; }
+        .search-mode-btn.active { background: rgba(102, 252, 241, 0.15); color: var(--accent-cyan); border-color: var(--accent-cyan); }
+        .search-input { width: 100%; padding: 16px 20px 16px 50px; background: rgba(11, 12, 16, 0.6); border: 1px solid rgba(255,255,255,0.1); border-radius: 15px; color: white; font-size: 1rem; outline: none; transition: 0.3s; backdrop-filter: blur(5px); }
+        .search-input:focus { border-color: var(--accent-cyan); box-shadow: 0 0 15px rgba(102, 252, 241, 0.2); }
+        .search-icon { position: absolute; left: 40px; bottom: 18px; color: #888; font-size: 1.1rem; }
+
+        .container { max-width: 1400px; margin: 0 auto; display: grid; grid-template-columns: repeat(auto-fill, minmax(300px, 1fr)); gap: 30px; padding: 20px; }
+        
+        .card {
+            background: var(--card-bg);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            overflow: hidden;
+            border: 2px solid rgba(255,255,255,0.05);
+            position: relative;
+            transition: 0.2s;
+            box-shadow: 0 15px 35px rgba(0,0,0,0.4);
+            cursor: default;
+        }
+        .card.dragging {
+            opacity: 0.5;
+            transform: scale(0.98);
+            border-color: var(--accent-cyan);
+            box-shadow: 0 0 30px rgba(102, 252, 241, 0.3);
+        }
+        .card.drag-over {
+            border-color: var(--accent-cyan);
+            border-width: 2px;
+            transform: scale(1.02);
+            box-shadow: 0 0 30px rgba(102, 252, 241, 0.5);
+        }
+        .card.drag-over::after {
+            content: '▼';
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: var(--accent-cyan);
+            opacity: 0.5;
+            pointer-events: none;
+            z-index: 100;
+        }
+        .card[draggable="true"] {
+            cursor: grab;
+        }
+        .card[draggable="true"]:active {
+            cursor: grabbing;
+        }
+        
+        .card-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid rgba(255,255,255,0.05); }
+        .card-body { padding: 25px; }
+        .demon-tag { position: absolute; top: 15px; left: 15px; background: var(--main-grad); color: #0b0c10; padding: 6px 12px; border-radius: 8px; font-weight: 900; font-size: 0.75rem; z-index: 50; box-shadow: 0 5px 15px rgba(0,0,0,0.5); text-transform: uppercase; }
+        .level-id-box { display: flex; align-items: center; gap: 8px; background: rgba(102, 252, 241, 0.08); padding: 10px 15px; border-radius: 10px; color: var(--accent-cyan); cursor: pointer; margin-bottom: 20px; font-weight: 700; transition: 0.2s; width: fit-content; font-size: 0.85rem; border: 1px solid rgba(102, 252, 241, 0.1); }
+        .level-id-box:hover { background: rgba(102, 252, 241, 0.15); border-color: rgba(102, 252, 241, 0.3); }
+
+        .admin-controls { position: absolute; top: 10px; right: 10px; z-index: 100; display: flex; gap: 8px; background: rgba(0,0,0,0.85); padding: 6px; border-radius: 12px; backdrop-filter: blur(5px); border: 1px solid rgba(255,255,255,0.1); }
+        .ctrl-btn { width: 34px; height: 34px; border-radius: 8px; border: none; cursor: pointer; display: flex; align-items: center; justify-content: center; color: white !important; font-size: 0.95rem; transition: 0.2s; }
+        .btn-up { background-color: #2ecc71 !important; } 
+        .btn-down { background-color: #3498db !important; } 
+        .btn-del { background-color: #e74c3c !important; } 
+        .ctrl-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
+
+        #admin-trigger { position: fixed; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.5rem; background: none; border: none; color: white; z-index: 1000; transition: 0.3s; display: none; }
+        #admin-trigger:hover { opacity: 1; color: var(--accent-cyan); }
+        .admin-form {
+            display: none; background: #12151e; padding: 25px 18px; border-radius: 20px;
+            position: fixed; top: 50%; left: 50%; transform: translate(-50%, -50%);
+            z-index: 2000; width: calc(100% - 28px); max-width: 450px;
+            max-height: calc(100vh - 40px); overflow-y: auto;
+            border: 1px solid var(--accent-cyan); box-shadow: 0 0 50px rgba(0,0,0,0.8);
+        }
+        .admin-form h2 { margin-top: 0; font-size: 1.5rem; color: white; text-align: center; font-family: Montserrat; }
+        .admin-form input, .admin-form select { width: 100%; padding: 14px; margin: 10px 0; background: #1a1e29; border: 1px solid #333; color: white; border-radius: 12px; font-size: 0.95rem; outline: none; transition: 0.3s; }
+        .admin-form input:focus, .admin-form select:focus { border-color: var(--accent-cyan); }
+
+        .drag-indicator {
+            position: fixed;
+            top: 100px;
+            right: 20px;
+            background: var(--accent-cyan);
+            color: #0b0c10;
+            padding: 10px 20px;
+            border-radius: 30px;
+            font-weight: 900;
+            z-index: 1000;
+            box-shadow: 0 0 20px rgba(102, 252, 241, 0.5);
+            animation: pulse 1.5s infinite;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+            100% { transform: scale(1); }
+        }
+
+        footer { padding: 40px 20px; text-align: center; background: rgba(11, 12, 16, 0.95); margin-top: auto; border-top: 1px solid rgba(255,255,255,0.05); }
+        .footer-socials { display: flex; justify-content: center; gap: 30px; margin-bottom: 20px; }
+        .footer-socials a { color: var(--text-main); font-size: 2rem; transition: 0.3s; text-decoration: none; }
+        .footer-socials a:hover { color: var(--accent-cyan); transform: translateY(-3px); }
+
+        .btn-more { width: 100%; padding: 15px; background: rgba(102, 252, 241, 0.1); border: 1px solid rgba(102, 252, 241, 0.3); color: var(--accent-cyan); border-radius: 12px; cursor: pointer; font-weight: 900; text-transform: uppercase; transition: 0.3s; font-size: 0.85rem; letter-spacing: 1px; }
+        .btn-more:hover { background: var(--main-grad); color: #0b0c10; border-color: transparent; }
+        
+        .modal {
+            display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background: rgba(0,0,0,0.9); z-index: 3000; backdrop-filter: blur(15px);
+            overflow-y: auto; -webkit-overflow-scrolling: touch;
+        }
+        .modal-content {
+            background: var(--card-bg); margin: 16px auto 50px; padding: 20px;
+            max-width: 750px; width: calc(100% - 28px); border-radius: 20px;
+            border: 1px solid rgba(102, 252, 241, 0.2); position: relative;
+            box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+        }
+        .modal-close-pin {
+            position: absolute; top: 14px; right: 14px;
+            width: 36px; height: 36px; border-radius: 9px; flex-shrink: 0;
+            background: rgba(255,70,70,0.13); border: 1px solid rgba(255,70,70,0.3);
+            color: #ff6868; font-size: 1rem; cursor: pointer;
+            display: flex; align-items: center; justify-content: center; transition: 0.2s; z-index: 10;
+        }
+        .modal-close-pin:hover { background: rgba(255,70,70,0.28); }
+
+        #copyToast { visibility: hidden; background: var(--main-grad); color: #0b0c10; padding: 15px 30px; position: fixed; left: 50%; bottom: 30px; transform: translateX(-50%); border-radius: 12px; z-index: 5000; font-weight: 900; font-size: 0.95rem; box-shadow: 0 10px 20px rgba(0,0,0,0.5); white-space: nowrap; }
+        #copyToast.show { visibility: visible; animation: fadeInUp 0.4s; }
+        @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
+
+        .record-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 12px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.05); gap: 8px; }
+
+        .home-video-section { max-width: 900px; margin: 0 auto 80px; padding: 0 20px; text-align: center; }
+        .home-video-label { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 18px; }
+        .home-video-line { flex: 1; height: 1px; background: rgba(102, 252, 241, 0.2); max-width: 120px; }
+        .home-video-tag { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-main); display: flex; align-items: center; }
+        .home-video-title { font-family: 'Montserrat'; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; margin: 0 0 30px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        .home-video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 1px solid rgba(102, 252, 241, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(102, 252, 241, 0.08); }
+        .home-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+
+        @media (max-width: 768px) {
+            .navbar { padding: 0 14px; height: 60px; flex-wrap: nowrap; }
+            .logo { font-size: 1.2rem; }
+            .nav-links { display: none !important; }
+            .burger-btn { display: flex !important; }
+            .section-page { margin-top: 60px; }
+
+            .welcome-hero { padding: 28px 16px; min-height: calc(100vh - 60px); }
+            .welcome-hero h1 { font-size: clamp(1.9rem, 9vw, 3.2rem); letter-spacing: 2px; }
+            .welcome-hero p { font-size: 0.95rem; margin: 16px 0 26px; }
+            .hero-btns { gap: 12px; }
+            .btn-main, .btn-outline { padding: 14px 22px; font-size: 0.88rem; flex: 1; min-width: 125px; max-width: 190px; }
+
+            .download-container { margin: 18px 14px; padding: 28px 16px; }
+            .dl-title { font-size: 1.9rem; }
+            .dl-version { font-size: 0.95rem; margin-bottom: 24px; }
+            .dl-cards { flex-direction: column; align-items: stretch; gap: 14px; }
+            .dl-card { min-width: 0; padding: 26px 20px; }
+
+            .hero-title { padding: 22px 14px 14px; }
+            .hero-title h2 { font-size: 1.9rem; letter-spacing: 2px; }
+            .top-50-text { font-size: 1.1rem; letter-spacing: 5px; }
+
+            .search-box { padding: 0 12px; margin-bottom: 22px; }
+            .search-modes { gap: 8px; }
+            .search-mode-btn { padding: 9px 12px; font-size: 0.77rem; flex: 1; text-align: center; }
+            .search-input { padding: 13px 14px 13px 42px; font-size: 0.93rem; }
+            .search-icon { left: 26px; bottom: 15px; font-size: 1rem; }
+
+            .container { grid-template-columns: 1fr; gap: 14px; padding: 8px 12px; }
+            .card-body { padding: 18px; }
+            .card-img { height: 155px; }
+
+            .home-video-section { padding: 0 14px; margin-bottom: 48px; }
+
+            .admin-form { padding: 20px 14px; }
+            .admin-form input, .admin-form select { padding: 12px; }
+        }
+
+        @media (max-width: 400px) {
+            .logo { font-size: 1rem; }
+            .hero-title h2 { font-size: 1.55rem; }
+        }
+
+        @media (min-width: 769px) {
+            .burger-btn { display: none !important; }
+            .mobile-menu { display: none !important; }
+        }
+    </style>
+</head>
+<body>
+    <div id="copyToast">ID Скопировано!</div>
+    <div class="bg-wrapper"><div class="grid-overlay"></div><div class="orb orb-1"></div><div class="orb orb-2"></div></div>
+
+    <nav class="navbar">
+        <div class="logo" onclick="openSection('homeSection')">Mysteryx GDPS</div>
+
+        <div class="nav-links">
+            <button class="nav-item" onclick="openSection('homeSection')" id="navHome">Главная</button>
+            <div class="dropdown">
+                <button class="nav-item" onclick="toggleDropdown('demonDrop', event)" id="navDemonListText">
+                    Demon List <i class="fas fa-caret-down"></i>
+                </button>
+                <div class="dropdown-content" id="demonDrop">
+                    <a onclick="openSection('listSection'); switchTab('demons');" id="navDropTop50">ТОП 50</a>
+                    <a onclick="openSection('listSection'); switchTab('creators');" id="navDropCreators">КРЕАТОРЫ</a>
+                </div>
+            </div>
+            <button class="btn-download-nav" onclick="openSection('downloadSection')">
+                <i class="fas fa-download"></i> <span id="navDownloadText">Скачать</span>
+            </button>
+            <div class="nav-socials">
+                <a href="https://t.me/mysteryxgdps" target="_blank" class="tg-icon" title="Telegram"><i class="fab fa-telegram"></i></a>
+                <a href="https://www.youtube.com/@lichigmdj98" target="_blank" class="yt-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <button onclick="toggleLang()" id="langBtn" style="background:none; border:1px solid rgba(102, 252, 241, 0.4); color:var(--accent-cyan); padding:5px 12px; cursor:pointer; border-radius:8px; font-weight:700; margin-left:10px;">RU</button>
+            </div>
+        </div>
+
+        <button class="burger-btn" id="burgerBtn" onclick="toggleBurger()">
+            <span></span><span></span><span></span>
+        </button>
+    </nav>
+
+    <div class="mobile-menu" id="mobileMenu">
+        <button class="m-btn" onclick="openSection('homeSection'); closeBurger();">
+            <i class="fas fa-home"></i> Главная
+        </button>
+        <button class="m-btn" onclick="openSection('listSection'); switchTab('demons'); closeBurger();">
+            <i class="fas fa-list"></i> ТОП 50 Демонов
+        </button>
+        <button class="m-btn" onclick="openSection('listSection'); switchTab('creators'); closeBurger();">
+            <i class="fas fa-star"></i> Топ Креаторов
+        </button>
+        <button class="m-btn green" onclick="openSection('downloadSection'); closeBurger();">
+            <i class="fas fa-download"></i> Скачать игру
+        </button>
+        <div class="m-socials">
+            <a href="https://t.me/mysteryxgdps" target="_blank" style="color:#00a2ed;"><i class="fab fa-telegram"></i></a>
+            <a href="https://www.youtube.com/@lichigmdj98" target="_blank" style="color:#ff0000;"><i class="fab fa-youtube"></i></a>
+        </div>
+        <button class="m-lang" onclick="toggleLang()">RU / EN</button>
+    </div>
+
+    <main id="homeSection" class="section-page active">
+        <header class="welcome-hero">
+            <h1 id="welcomeTitle">MYSTERYX GDPS</h1>
+            <p id="welcomeDesc">Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.</p>
+            <div class="hero-btns">
+                <button onclick="openSection('downloadSection')" class="btn-main" id="btnPlay">СКАЧАТЬ ИГРУ</button>
+                <button onclick="openSection('listSection'); switchTab('demons');" class="btn-outline" id="btnList">DEMON LIST</button>
+            </div>
+        </header>
+
+        <section class="home-video-section">
+            <div class="home-video-label">
+                <span class="home-video-line"></span>
+                <span class="home-video-tag"><i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>СМОТРЕТЬ НА YOUTUBE</span>
+                <span class="home-video-line"></span>
+            </div>
+            <h2 class="home-video-title">Mysteryx GDPS | Новая Приватка</h2>
+            <div class="home-video-wrapper">
+                <iframe src="https://www.youtube.com/embed/4FVkdKR-p5Y" title="Mysteryx GDPS | Новая Приватка" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+            </div>
+        </section>
+    </main>
+
+    <main id="downloadSection" class="section-page">
+        <div class="download-container">
+            <h2 class="dl-title" id="dlTitle">СКАЧАТЬ ИГРУ</h2>
+            <div class="dl-version" id="dlVersion">Версия 2.2081</div>
+            <div class="dl-cards">
+                <a href="https://drive.google.com/file/d/1JDpXrU-QtROGSTzLf10vHlgSS-6SvYNl/view?usp=drive_link" target="_blank" class="dl-card pc">
+                    <i class="fab fa-windows dl-icon"></i>
+                    <div class="dl-name">PC / Windows</div>
+                    <div class="dl-desc" id="dlDescPC">Скачать .zip архив для игры на компьютере</div>
+                </a>
+                <a href="https://drive.google.com/file/d/16iEN3S9gwmYAkWNTvQb56yhyV_tD11st/view?usp=sharing" target="_blank" class="dl-card android">
+                    <i class="fab fa-android dl-icon"></i>
+                    <div class="dl-name">Android</div>
+                    <div class="dl-desc" id="dlDescAnd">Скачать .apk файл для игры на телефоне</div>
+                </a>
+            </div>
+        </div>
+    </main>
+
+    <main id="listSection" class="section-page">
+        <div class="hero-title">
+            <h2 id="txtHero">DEMON LIST</h2>
+            <div class="top-50-text" id="top50Banner">TOP 50</div>
+        </div>
+        <div class="search-box">
+            <div class="search-modes">
+                <button id="searchModeMain" class="search-mode-btn active" onclick="setSearchMode('main')">Название / Автор</button>
+                <button id="searchModeTag" class="search-mode-btn" onclick="setSearchMode('tag')">По тегу</button>
+            </div>
+            <i class="fas fa-search search-icon"></i>
+            <input type="text" id="searchInput" class="search-input" placeholder="Поиск уровня или автора..." oninput="render()">
+        </div>
+        
+        <div id="dragIndicator" class="drag-indicator" style="display: none;">
+            <i class="fas fa-arrows-alt"></i> Drag & Drop активен
+        </div>
+        
+        <div class="container" id="mainContainer"></div>
+    </main>
+
+    <footer>
+        <div class="footer-socials">
+            <a href="https://t.me/mysteryxgdps" target="_blank"><i class="fab fa-telegram"></i></a>
+            <a href="https://www.youtube.com/@lichigmdj98" target="_blank"><i class="fab fa-youtube"></i></a>
+        </div>
+        <p style="color:var(--text-main);">© 2026 Mysteryx GDPS. Developed with passion.</p>
+        <a href="https://t.me/mysteryxgdps/11198/11199" id="verifyLink" style="color:#666; text-decoration:none; font-size:0.85rem; transition:0.3s;" target="_blank">Критерии верификации</a>
+    </footer>
+
+    <button id="admin-trigger" onclick="openAdmin()"><i class="fas fa-cog"></i></button>
+
+    <div id="adminPanel" class="admin-form">
+        <button onclick="closeAdmin()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:8px;background:rgba(255,70,70,0.13);border:1px solid rgba(255,70,70,0.3);color:#ff6868;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
+            <i class="fas fa-times"></i>
+        </button>
+        <h2>ADMIN PANEL</h2>
+
+        <div id="loginBlock">
+            <input type="email" id="adminEmail" placeholder="Email">
+            <input type="password" id="adminPass" placeholder="Пароль">
+            <div id="loginError" style="color:#ff6868;font-size:0.85rem;text-align:center;margin-top:6px;display:none;">Неверный email или пароль</div>
+            <button class="btn-more" style="background:var(--main-grad);color:#0b0c10;margin-top:15px;border:none;" onclick="adminLogin()">ВОЙТИ</button>
+        </div>
+
+        <div id="adminControls" style="display:none;">
+            <select id="admAction" onchange="toggleAdmFields()">
+                <option value="add_demon">Добавить Демона</option>
+                <option value="add_creator">Добавить Креатора</option>
+                <option value="add_victor">Добавить Рекорд</option>
+                <option value="delete_mode">Удаление / Движение</option>
+                <option value="delete_all_demons">🗑️ Удалить ВСЕХ демонов</option>
+                <option value="maintenance">🔧 Техперерыв вкл/выкл</option>
+                <option value="drag_drop">🖱️ Drag & Drop режим</option>
+            </select>
+            <div id="fields_main">
+                <input type="text" id="itemName" placeholder="Название / Ник">
+                <input type="text" id="itemVal" placeholder="Автор / CP">
+                <div id="fields_demon">
+                    <input type="text" id="itemID" placeholder="ID Уровня">
+                    <input type="text" id="itemTag" placeholder="Тег (напр. Top 1)">
+                    <input type="text" id="itemVerifier" placeholder="Верифер">
+                    <input type="text" id="itemImgURL" placeholder="Ссылка на картинку">
+                    <input type="text" id="itemVid" placeholder="Ссылка на YouTube">
+                </div>
+            </div>
+            <div id="fields_victor" style="display:none;">
+                <select id="selectDemon" style="width:100%"></select>
+                <input type="text" id="vicName" placeholder="Ник игрока">
+                <input type="text" id="vicPerc" placeholder="Проценты">
+                <input type="text" id="vicAtt" placeholder="Попытки">
+            </div>
+            <button class="btn-more" style="background:var(--main-grad);color:#0b0c10;margin-top:15px;border:none;" onclick="processAdmin()">ВЫПОЛНИТЬ</button>
+            <button class="btn-more" style="background:transparent;border:1px solid #e74c3c;color:#e74c3c;margin-top:10px;" onclick="adminLogout()">ВЫЙТИ ИЗ АККАУНТА</button>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal"><div class="modal-content" id="modalData"></div></div>
+
+    <script>
+        // ТВОЯ КОНФИГУРАЦИЯ FIREBASE
+        const firebaseConfig = {
+            apiKey: "AIzaSyAt_V1zhTFDM308B-XSvVIN9N2JzROBQwc",
+            authDomain: "alexgdps2.firebaseapp.com",
+            databaseURL: "https://alexgdps2-default-rtdb.firebaseio.com",
+            projectId: "alexgdps2",
+            storageBucket: "alexgdps2.firebasestorage.app",
+            messagingSenderId: "710720686909",
+            appId: "1:710720686909:web:d9ec94e2a9dc7a5ec05354",
+            measurementId: "G-WJHP7Y0W1V"
+        };
+        
+        firebase.initializeApp(firebaseConfig);
+        const db = firebase.database();
+        const auth = firebase.auth();
+        const functions = firebase.functions();
+
+        let currentLang = 'RU';
+        let isAdmin = false;
+        let isDeleteMode = false;
+        let isDragDropMode = false;
+        let searchMode = 'main';
+        let currentTab = 'demons';
+        let demons = [];
+        let creators = [];
+
+        let draggedItem = null;
+        let draggedIndex = -1;
+
+        if (localStorage.getItem('mxAdmin') === '1') {
+            document.getElementById('admin-trigger').style.display = 'block';
+        }
+
+        auth.onAuthStateChanged(user => {
+            isAdmin = !!user;
+            const trigger = document.getElementById('admin-trigger');
+            if (isAdmin) {
+                localStorage.setItem('mxAdmin', '1');
+                trigger.style.display = 'block';
+            } else {
+                localStorage.removeItem('mxAdmin');
+                trigger.style.display = 'none';
+                isDeleteMode = false;
+                isDragDropMode = false;
+                render();
+            }
+        });
+
+        function adminLogin() {
+            const email = document.getElementById('adminEmail').value.trim();
+            const pass = document.getElementById('adminPass').value;
+            const errEl = document.getElementById('loginError');
+            errEl.style.display = 'none';
+            auth.signInWithEmailAndPassword(email, pass)
+                .then(() => {
+                    document.getElementById('loginBlock').style.display = 'none';
+                    document.getElementById('adminControls').style.display = 'block';
+                    toggleAdmFields();
+                })
+                .catch(() => { errEl.style.display = 'block'; });
+        }
+
+        function adminLogout() {
+            auth.signOut();
+            closeAdmin();
+        }
+
+        function openAdmin() {
+            document.getElementById('loginBlock').style.display = isAdmin ? 'none' : 'block';
+            document.getElementById('adminControls').style.display = isAdmin ? 'block' : 'none';
+            document.getElementById('loginError').style.display = 'none';
+            document.getElementById('adminPanel').style.display = 'block';
+            toggleAdmFields();
+        }
+
+        function toggleBurger() {
+            const menu = document.getElementById('mobileMenu');
+            const btn  = document.getElementById('burgerBtn');
+            const open = menu.classList.contains('open');
+            menu.classList.toggle('open', !open);
+            btn.classList.toggle('open', !open);
+        }
+        function closeBurger() {
+            document.getElementById('mobileMenu').classList.remove('open');
+            document.getElementById('burgerBtn').classList.remove('open');
+        }
+
+        function openSection(id) {
+            document.querySelectorAll('.section-page').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0,0);
+            const drops = document.getElementsByClassName("dropdown-content");
+            for (let i = 0; i < drops.length; i++) { drops[i].classList.remove('show'); }
+            closeBurger();
+        }
+
+        function toggleDropdown(id, event) {
+            event.stopPropagation();
+            document.getElementById(id).classList.toggle("show");
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.nav-item') && !event.target.matches('.fa-caret-down')) {
+                var dropdowns = document.getElementsByClassName("dropdown-content");
+                for (var i = 0; i < dropdowns.length; i++) {
+                    if (dropdowns[i].classList.contains('show')) { dropdowns[i].classList.remove('show'); }
+                }
+            }
+        }
+
+        db.ref('demons').on('value', s => {
+            const val = s.val();
+            demons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=>(a.order||0)-(b.order||0)) : [];
+            const sel = document.getElementById('selectDemon');
+            if(sel) sel.innerHTML = demons.map(d => `<option value="${d.key}">${d.name}</option>`).join('');
+            render();
+        });
+        
+        db.ref('creators').on('value', s => {
+            const val = s.val();
+            creators = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=>parseInt(b.points)-parseInt(a.points)) : [];
+            render();
+        });
+
+        function setSearchMode(m) {
+            searchMode = m;
+            document.getElementById('searchModeMain').classList.toggle('active', m === 'main');
+            document.getElementById('searchModeTag').classList.toggle('active', m === 'tag');
+            render();
+        }
+
+        function handleDragStart(index, event) {
+            if (!isDragDropMode) {
+                event.preventDefault();
+                return;
+            }
+            draggedIndex = index;
+            draggedItem = demons[index];
+            event.dataTransfer.setData('text/plain', index);
+            event.currentTarget.classList.add('dragging');
+        }
+
+        function handleDragOver(index, event) {
+            if (!isDragDropMode || draggedIndex === -1) return;
+            event.preventDefault();
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+            event.currentTarget.classList.add('drag-over');
+        }
+
+        function handleDragLeave(event) {
+            event.currentTarget.classList.remove('drag-over');
+        }
+
+        function handleDrop(targetIndex, event) {
+            event.preventDefault();
+            event.currentTarget.classList.remove('drag-over');
+            
+            if (!isDragDropMode || draggedIndex === -1 || draggedIndex === targetIndex) return;
+
+            const newDemons = [...demons];
+            const dragged = newDemons[draggedIndex];
+            
+            newDemons.splice(draggedIndex, 1);
+            newDemons.splice(targetIndex, 0, dragged);
+
+            const updates = {};
+            newDemons.forEach((demon, idx) => {
+                if (demon.order !== idx) {
+                    updates[`/demons/${demon.key}/order`] = idx;
+                }
+            });
+            
+            db.ref().update(updates).then(() => {
+                showToast('Порядок обновлён!');
+            });
+
+            draggedIndex = -1;
+            draggedItem = null;
+        }
+
+        function handleDragEnd(event) {
+            event.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+            draggedIndex = -1;
+            draggedItem = null;
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('copyToast');
+            toast.innerText = message;
+            toast.className = 'show';
+            setTimeout(() => toast.className = '', 2000);
+        }
+
+        function toggleDragDropMode() {
+            isDragDropMode = !isDragDropMode;
+            const indicator = document.getElementById('dragIndicator');
+            indicator.style.display = isDragDropMode ? 'flex' : 'none';
+            render();
+            showToast(isDragDropMode ? 'Drag & Drop режим включён' : 'Drag & Drop режим выключён');
+        }
+
+        function render() {
+            const container = document.getElementById('mainContainer');
+            const isDem = (currentTab === 'demons');
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const topBanner = document.getElementById('top50Banner');
+
+            container.innerHTML = '';
+            document.getElementById('txtHero').innerText = isDem ? (currentLang==='EN'?'DEMON LIST':'СПИСОК ДЕМОНОВ') : (currentLang==='EN'?'CREATOR TOP':'ТОП КРЕАТОРОВ');
+            topBanner.style.display = isDem ? 'block' : 'none';
+
+            if(isDem) {
+                const filtered = demons.filter(d => {
+                    if (searchMode === 'tag') { return d.tag && d.tag.toLowerCase().includes(query); }
+                    return d.name.toLowerCase().includes(query) || d.author.toLowerCase().includes(query);
+                });
+                
+                filtered.forEach((d, i) => {
+                    const card = document.createElement('div');
+                    card.className = 'card';
+                    
+                    if (isDragDropMode && isAdmin) {
+                        card.setAttribute('draggable', 'true');
+                        card.setAttribute('data-index', i);
+                        card.ondragstart = (e) => handleDragStart(i, e);
+                        card.ondragover = (e) => handleDragOver(i, e);
+                        card.ondragleave = handleDragLeave;
+                        card.ondrop = (e) => handleDrop(i, e);
+                        card.ondragend = handleDragEnd;
+                    }
+                    
+                    card.innerHTML = `
+                        ${isDeleteMode ? `
+                        <div class="admin-controls">
+                            <button class="ctrl-btn btn-up" onclick="moveItem('${d.key}', -1)"><i class="fas fa-arrow-up"></i></button>
+                            <button class="ctrl-btn btn-down" onclick="moveItem('${d.key}', 1)"><i class="fas fa-arrow-down"></i></button>
+                            <button class="ctrl-btn btn-del" onclick="deleteItem('${d.key}','demons')"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                        ${isDragDropMode && isAdmin ? `
+                        <div style="position: absolute; top: 10px; left: 10px; background: rgba(102,252,241,0.2); padding: 4px 8px; border-radius: 5px; font-size: 0.7rem; color: var(--accent-cyan); z-index: 50;">
+                            <i class="fas fa-grip-vertical"></i> Drag me
+                        </div>` : ''}
+                        ${d.tag ? `<div class="demon-tag">${d.tag}</div>` : ''}
+                        <img src="${d.img}" class="card-img" onerror="this.src='https://via.placeholder.com/600x300/1f2833/66fcf1?text=Mysteryx'">
+                        <div class="card-body">
+                            <h3 style="margin:0; color:var(--accent-cyan); font-size: 1.25rem;">#${i+1} ${d.name}</h3>
+                            <p style="color:#aaa; margin: 6px 0 15px; font-size: 0.9rem;">by <span style="color:#fff">${d.author}</span></p>
+                            <div class="level-id-box" onclick="copyID('${d.levelID}')">ID: ${d.levelID}</div>
+                            <button class="btn-more" onclick="showInfoByKey('${d.key}')">${currentLang==='EN'?'DETAILS':'ПОДРОБНЕЕ'}</button>
+                        </div>
+                    `;
+                    container.appendChild(card);
+                });
+            } else {
+                const filtered = creators.filter(c => c.name.toLowerCase().includes(query));
+                filtered.forEach((c, i) => {
+                    container.innerHTML += `<div class="card">
+                        ${isDeleteMode ? `<div class="admin-controls">
+                            <button class="ctrl-btn btn-del" onclick="deleteItem('${c.key}','creators')"><i class="fas fa-trash"></i></button>
+                        </div>` : ''}
+                        <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; padding:35px 40px;">
+                            <h3 style="margin:0; font-size: 1.2rem; color: #fff;">#${i+1} ${c.name}</h3>
+                            <div style="text-align:right;"><span style="font-size:1.5rem; color:var(--accent-cyan); font-weight:900;">${c.points} CP</span></div>
+                        </div>
+                    </div>`;
+                });
+            }
+        }
+
+        function processAdmin() {
+            if (!isAdmin) { alert('Нет доступа!'); return; }
+            const act = document.getElementById('admAction').value;
+            if(act === 'add_demon') {
+                let r = document.getElementById('itemVid').value;
+                let v = r.includes('v=') ? r.split('v=')[1].split('&')[0] : r.includes('youtu.be/') ? r.split('youtu.be/')[1].split('?')[0] : r;
+                db.ref('demons').push({ 
+                    name: document.getElementById('itemName').value, 
+                    author: document.getElementById('itemVal').value, 
+                    levelID: document.getElementById('itemID').value, 
+                    tag: document.getElementById('itemTag').value, 
+                    verifier: document.getElementById('itemVerifier').value, 
+                    img: document.getElementById('itemImgURL').value, 
+                    vid: v, 
+                    order: demons.length 
+                });
+                closeAdmin();
+            } else if(act === 'add_creator') {
+                db.ref('creators').push({ 
+                    name: document.getElementById('itemName').value, 
+                    points: parseInt(document.getElementById('itemVal').value) || 0 
+                });
+                closeAdmin();
+            } else if(act === 'add_victor') {
+                const dKey = document.getElementById('selectDemon').value;
+                db.ref(`demons/${dKey}/victors`).push({ 
+                    name: document.getElementById('vicName').value, 
+                    perc: document.getElementById('vicPerc').value, 
+                    att: document.getElementById('vicAtt').value 
+                });
+                closeAdmin();
+            } else if(act === 'delete_mode') {
+                isDeleteMode = !isDeleteMode; render(); closeAdmin();
+            } else if(act === 'delete_all_demons') {
+                if(confirm('⚠️ Удалить ВСЕХ демонов из списка? Это действие необратимо!')) {
+                    db.ref('demons').remove();
+                }
+                closeAdmin();
+            } else if(act === 'maintenance') {
+                db.ref('maintenance').once('value', s => {
+                    const current = s.val() === true;
+                    db.ref('maintenance').set(!current);
+                    alert(!current ? '🔧 Техперерыв ВКЛЮЧЁН — сайт закрыт для посетителей' : '✅ Техперерыв ВЫКЛЮЧЕН — сайт открыт');
+                });
+                closeAdmin();
+            } else if(act === 'drag_drop') {
+                toggleDragDropMode();
+                closeAdmin();
+            }
+        }
+
+        function toggleLang() {
+            currentLang = currentLang === 'RU' ? 'EN' : 'RU';
+            document.getElementById('langBtn').innerText = currentLang;
+            
+            const translations = {
+                RU: {
+                    welcomeT: "MYSTERYX GDPS",
+                    welcomeD: "Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.",
+                    play: "СКАЧАТЬ ИГРУ",
+                    list: "DEMON LIST",
+                    searchM: "Название / Автор",
+                    searchT: "По тегу",
+                    searchP: "Поиск уровня или автора...",
+                    verify: "Критерии верификации",
+                    toast: "ID Скопировано!",
+                    navDropTop50: "ТОП 50",
+                    navDropCreators: "КРЕАТОРЫ",
+                    navDownloadText: "Скачать",
+                    navHome: "Главная",
+                    dlTitle: "СКАЧАТЬ ИГРУ",
+                    dlVersion: "Версия 2.2081",
+                    dlDescPC: "Скачать .zip архив для игры на компьютере",
+                    dlDescAnd: "Скачать .apk файл для игры на телефоне"
+                },
+                EN: {
+                    welcomeT: "MYSTERYX GDPS",
+                    welcomeD: "Dive into the world of the most ambitious Geometry Dash private server. Stability, unique levels, and the strongest community.",
+                    play: "DOWNLOAD GAME",
+                    list: "DEMON LIST",
+                    searchM: "Name / Author",
+                    searchT: "By Tag",
+                    searchP: "Search level or creator...",
+                    verify: "Verification Criteria",
+                    toast: "ID Copied!",
+                    navDropTop50: "TOP 50",
+                    navDropCreators: "CREATORS",
+                    navDownloadText: "Download",
+                    navHome: "Home",
+                    dlTitle: "DOWNLOAD GAME",
+                    dlVersion: "Version 2.2081",
+                    dlDescPC: "Download .zip archive to play on PC",
+                    dlDescAnd: "Download .apk file to play on mobile"
+                }
+            };
+
+            const t = translations[currentLang];
+            document.getElementById('welcomeTitle').innerText = t.welcomeT;
+            document.getElementById('welcomeDesc').innerText = t.welcomeD;
+            document.getElementById('btnPlay').innerText = t.play;
+            document.getElementById('btnList').innerText = t.list;
+            document.getElementById('searchModeMain').innerText = t.searchM;
+            document.getElementById('searchModeTag').innerText = t.searchT;
+            document.getElementById('searchInput').placeholder = t.searchP;
+            document.getElementById('verifyLink').innerText = t.verify;
+            document.getElementById('copyToast').innerText = t.toast;
+            document.getElementById('navDemonListText').innerHTML = `${t.list} <i class="fas fa-caret-down"></i>`;
+            document.getElementById('navDownloadText').innerText = t.navDownloadText;
+            document.getElementById('navDropTop50').innerText = t.navDropTop50;
+            document.getElementById('navDropCreators').innerText = t.navDropCreators;
+            document.getElementById('navHome').innerText = t.navHome;
+            document.getElementById('dlTitle').innerText = t.dlTitle;
+            document.getElementById('dlVersion').innerText = t.dlVersion;
+            document.getElementById('dlDescPC').innerText = t.dlDescPC;
+            document.getElementById('dlDescAnd').innerText = t.dlDescAnd;
+            render();
+        }
+
+        function showInfoByKey(key) {
+            const d = demons.find(x => x.key === key);
+            if (!d) return;
+            
+            const vics = d.victors ? Object.entries(d.victors).map(([vk, v]) => `
+                <div class="record-item">
+                    <span><b style="color:#fff;">${v.name}</b> — <span style="color:var(--accent-cyan); font-weight:700;">${v.perc || '100%'}</span> <span style="color:#aaa;">(${v.att || '0'} att)</span></span>
+                    ${isDeleteMode ? `<i class="fas fa-times" style="color:#ff4d4d; cursor:pointer; flex-shrink:0;" onclick="deleteVictor('${d.key}', '${vk}')"></i>` : ''}
+                </div>`).join('') : `<p style='color:#888;'>${currentLang==='EN'?'No records yet':'Рекордов пока нет'}</p>`;
+
+            document.getElementById('modalData').innerHTML = `
+                <button class="modal-close-pin" onclick="document.getElementById('detailModal').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2 style="font-family:Montserrat; font-size:clamp(1.3rem,5vw,2rem); margin:0 44px 4px 0; color: #fff;">${d.name}</h2>
+                <p style="color:#aaa; font-size:0.9rem; margin:0 0 14px;">by <span style="color:var(--accent-cyan);">${d.author}</span> ${d.verifier ? '| Verified by ' + d.verifier : ''}</p>
+                <iframe style="width:100%; aspect-ratio:16/9; border-radius:14px; margin:0 0 18px; border:1px solid rgba(102, 252, 241, 0.2);" src="https://www.youtube.com/embed/${d.vid}" frameborder="0" allowfullscreen></iframe>
+                <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">Victors & Records:</h3>
+                <div style="max-height:220px; overflow-y:auto; padding-right:6px;">${vics}</div>
+                <button class="btn-more" style="background:transparent; border:1px solid #555; color:#888; margin-top:20px;" onclick="document.getElementById('detailModal').style.display='none'">${currentLang==='EN'?'CLOSE':'ЗАКРЫТЬ'}</button>`;
+            
+            document.getElementById('detailModal').style.display='block';
+            document.getElementById('detailModal').scrollTop = 0;
+        }
+
+        function deleteVictor(dk, vk) { 
+            if(confirm(currentLang==='EN'?"Delete record?":"Удалить рекорд?")) {
+                db.ref(`demons/${dk}/victors/${vk}`).remove().then(() => {
+                    document.getElementById('detailModal').style.display='none';
+                });
+            } 
+        }
+
+        function copyID(id) { 
+            navigator.clipboard.writeText(id); 
+            const t = document.getElementById("copyToast"); 
+            t.className = "show"; 
+            setTimeout(() => t.className = "", 3000); 
+        }
+        
+        function moveItem(key, dir) {
+            const index = demons.findIndex(d => d.key === key);
+            if (index === -1) return;
+            let target = index + dir; 
+            if (target < 0 || target >= demons.length) return;
+            const updates = {}; 
+            updates[`/demons/${demons[index].key}/order`] = target; 
+            updates[`/demons/${demons[target].key}/order`] = index;
+            db.ref().update(updates);
+        }
+
+        function toggleAdmFields() { 
+            const a = document.getElementById('admAction').value; 
+            document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_creator') ? 'block' : 'none'; 
+            document.getElementById('fields_demon').style.display = a === 'add_demon' ? 'block' : 'none'; 
+            document.getElementById('fields_victor').style.display = a === 'add_victor' ? 'block' : 'none'; 
+        }
+
+        function closeAdmin() { 
+            document.getElementById('adminPanel').style.display='none'; 
+        }
+        
+        function switchTab(t) { 
+            currentTab = t; 
+            render(); 
+        }
+        
+        function deleteItem(k, p) { 
+            if(confirm("Delete item?")) 
+                db.ref(p+'/'+k).remove(); 
+        }
+    </script>
+
+    <div id="maintenanceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; background:#0b0c10; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;">
+        <div style="font-size:4rem; margin-bottom:20px;">🔧</div>
+        <h1 style="font-family:'Montserrat',sans-serif; font-size:clamp(2rem,6vw,4rem); margin:0 0 16px; background:linear-gradient(135deg,#66fcf1,#45a29e); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">ТЕХНИЧЕСКИЙ ПЕРЕРЫВ</h1>
+        <p style="color:#c5c6c7; font-size:1.1rem; max-width:500px; line-height:1.7; margin:0 0 30px;">Сайт временно недоступен. Мы проводим технические работы. Скоро вернёмся!</p>
+        <div style="background:rgba(102,252,241,0.08); border:1px solid rgba(102,252,241,0.2); border-radius:12px; padding:12px 24px; color:#66fcf1; font-weight:700; font-size:0.9rem; letter-spacing:1px;">MYSTERYX GDPS</div>
+    </div>
+
+    <script>
+        db.ref('maintenance').on('value', s => {
+            const on = s.val() === true;
+            const overlay = document.getElementById('maintenanceOverlay');
+            if (on && !isAdmin) {
+                overlay.style.display = 'flex';
+                document.body.style.overflow = 'hidden';
+            } else {
+                overlay.style.display = 'none';
+                document.body.style.overflow = '';
+            }
+        });
+    </script>
+
+</body>
+</html>
