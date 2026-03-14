@@ -133,6 +133,27 @@
         .dl-name { font-size: 1.5rem; font-weight: 900; margin-bottom: 10px; font-family: 'Montserrat'; }
         .dl-desc { font-size: 0.9rem; color: #888; font-weight: 400; }
 
+        /* GDPS SWITCHER card */
+        .gdps-card {
+            cursor: pointer;
+        }
+        .gdps-address {
+            font-family: 'Courier New', monospace;
+            font-size: 1.1rem !important;
+            color: var(--accent-cyan) !important;
+            background: rgba(102,252,241,0.05);
+            padding: 8px 12px;
+            border-radius: 8px;
+            margin-top: 8px;
+            letter-spacing: 0.5px;
+            border: 1px solid rgba(102,252,241,0.2);
+            transition: 0.3s;
+        }
+        .gdps-card:hover .gdps-address {
+            background: rgba(102,252,241,0.15);
+            border-color: var(--accent-cyan);
+        }
+
         .hero-title { width: 100%; display: flex; flex-direction: column; justify-content: center; align-items: center; padding: 40px 20px 30px; text-align: center; }
         .hero-title h2 { font-family: 'Montserrat'; font-size: 2.8rem; margin: 0; text-transform: uppercase; letter-spacing: 3px; }
         .top-50-text { color: var(--accent-cyan); font-family: 'Montserrat'; font-weight: 900; font-size: 1.5rem; margin-top: 5px; letter-spacing: 8px; text-shadow: 0 0 15px rgba(102, 252, 241, 0.5); }
@@ -351,8 +372,8 @@
                 <i class="fas fa-download"></i> <span id="navDownloadText">Скачать</span>
             </button>
             <div class="nav-socials">
-                <a href="https://t.me/podvalAleksaPleya" target="_blank" class="tg-icon" title="Telegram"><i class="fab fa-telegram"></i></a>
-                <a href="https://www.youtube.com/@alexplaygd" target="_blank" class="yt-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
+                <a href="https://t.me/mysteryxgdps" target="_blank" class="tg-icon" title="Telegram"><i class="fab fa-telegram"></i></a>
+                <a href="https://www.youtube.com/@lichigmdj98" target="_blank" class="yt-icon" title="YouTube"><i class="fab fa-youtube"></i></a>
                 <button onclick="toggleLang()" id="langBtn" style="background:none; border:1px solid rgba(102, 252, 241, 0.4); color:var(--accent-cyan); padding:5px 12px; cursor:pointer; border-radius:8px; font-weight:700; margin-left:10px;">RU</button>
             </div>
         </div>
@@ -408,24 +429,27 @@
     <main id="downloadSection" class="section-page">
         <div class="download-container">
             <h2 class="dl-title" id="dlTitle">СКАЧАТЬ ИГРУ</h2>
-            <div class="dl-version" id="dlVersion">Версия 2.207</div>
+            <div class="dl-version" id="dlVersion">Версия 2.2081</div>
             <div class="dl-cards">
+                <!-- PC версия -->
                 <a href="https://drive.google.com/file/d/1JDpXrU-QtROGSTzLf10vHlgSS-6SvYNl/view?usp=drive_link" target="_blank" class="dl-card pc">
                     <i class="fab fa-windows dl-icon"></i>
                     <div class="dl-name">PC / Windows</div>
                     <div class="dl-desc" id="dlDescPC">Скачать .zip архив для игры на компьютере</div>
                 </a>
+
+                <!-- GDPS SWITCHER (новая карточка) -->
+                <div class="dl-card gdps-card" onclick="copyGDPS()">
+                    <i class="fas fa-exchange-alt dl-icon"></i>
+                    <div class="dl-name">GDPS SWITCHER</div>
+                    <div class="dl-desc gdps-address">exgdops.ps.fhgdps.com</div>
+                </div>
+
+                <!-- Android версия -->
                 <a href="https://drive.google.com/file/d/16iEN3S9gwmYAkWNTvQb56yhyV_tD11st/view?usp=sharing" target="_blank" class="dl-card android">
                     <i class="fab fa-android dl-icon"></i>
                     <div class="dl-name">Android</div>
                     <div class="dl-desc" id="dlDescAnd">Скачать .apk файл для игры на телефоне</div>
-
-            <div class="dl-card gdps-card" onclick="copyGDPS()">
-        <i class="fas fa-exchange-alt dl-icon"></i>
-        <div class="dl-name">GDPS SWITCHER</div>
-        <div class="dl-desc gdps-address">exgdops.ps.fhgdps.com</div>
-    </div>
-</div>
                 </a>
             </div>
         </div>
@@ -832,6 +856,20 @@
             }
         }
 
+        // Функция копирования адреса GDPS SWITCHER
+        function copyGDPS() {
+            const text = "exgdops.ps.fhgdps.com";
+            navigator.clipboard.writeText(text).then(() => {
+                const toast = document.getElementById('copyToast');
+                toast.innerText = currentLang === 'RU' ? 'Адрес скопирован!' : 'Address copied!';
+                toast.className = 'show';
+                setTimeout(() => toast.className = '', 2000);
+            }).catch(err => {
+                console.error('Ошибка копирования: ', err);
+                alert('Не удалось скопировать');
+            });
+        }
+
         function toggleLang() {
             currentLang = currentLang === 'RU' ? 'EN' : 'RU';
             document.getElementById('langBtn').innerText = currentLang;
@@ -854,7 +892,8 @@
                     dlTitle: "СКАЧАТЬ ИГРУ",
                     dlVersion: "Версия 2.2081",
                     dlDescPC: "Скачать .zip архив для игры на компьютере",
-                    dlDescAnd: "Скачать .apk файл для игры на телефоне"
+                    dlDescAnd: "Скачать .apk файл для игры на телефоне",
+                    gdpsCopied: "Адрес скопирован!"
                 },
                 EN: {
                     welcomeT: "MYSTERYX GDPS",
@@ -873,7 +912,8 @@
                     dlTitle: "DOWNLOAD GAME",
                     dlVersion: "Version 2.2081",
                     dlDescPC: "Download .zip archive to play on PC",
-                    dlDescAnd: "Download .apk file to play on mobile"
+                    dlDescAnd: "Download .apk file to play on mobile",
+                    gdpsCopied: "Address copied!"
                 }
             };
 
@@ -886,7 +926,7 @@
             document.getElementById('searchModeTag').innerText = t.searchT;
             document.getElementById('searchInput').placeholder = t.searchP;
             document.getElementById('verifyLink').innerText = t.verify;
-            document.getElementById('copyToast').innerText = t.toast;
+            document.getElementById('copyToast').innerText = t.toast; // по умолчанию для ID, но мы меняем динамически в copyGDPS
             document.getElementById('navDemonListText').innerHTML = `${t.list} <i class="fas fa-caret-down"></i>`;
             document.getElementById('navDownloadText').innerText = t.navDownloadText;
             document.getElementById('navDropTop50').innerText = t.navDropTop50;
