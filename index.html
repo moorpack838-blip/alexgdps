@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили остаются без изменений (можно оставить как есть) */
+        /* Все стили без изменений (можно оставить как в предыдущей версии) */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -431,7 +431,6 @@
             color: #fff;
         }
 
-        /* Стили для детальной информации в модалке */
         .detail-stats {
             display: grid;
             grid-template-columns: 1fr 1fr;
@@ -471,6 +470,104 @@
         .copy-password button:hover {
             background: var(--accent-cyan);
             color: #0b0c10;
+        }
+
+        .rankings-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .rankings-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-top: 20px;
+        }
+        .rankings-table th {
+            text-align: left;
+            padding: 12px;
+            background: rgba(102,252,241,0.1);
+            color: var(--accent-cyan);
+            font-weight: 700;
+            border-bottom: 2px solid var(--accent-cyan);
+        }
+        .rankings-table td {
+            padding: 10px 12px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .rankings-table tr:hover {
+            background: rgba(255,255,255,0.02);
+        }
+        .rankings-table .clickable {
+            cursor: pointer;
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+        .rankings-table .clickable:hover {
+            color: #fff;
+        }
+
+        .player-profile {
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .player-header {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(102,252,241,0.2);
+        }
+        .player-header h2 {
+            margin: 0 0 10px;
+            color: var(--accent-cyan);
+        }
+        .player-stats {
+            display: flex;
+            gap: 40px;
+            margin-top: 20px;
+        }
+        .player-stat {
+            text-align: center;
+        }
+        .player-stat .label {
+            color: #888;
+            font-size: 0.9rem;
+        }
+        .player-stat .value {
+            font-size: 2rem;
+            font-weight: 900;
+            color: #fff;
+        }
+        .player-records {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(102,252,241,0.2);
+        }
+        .player-records h3 {
+            margin-top: 0;
+            color: var(--accent-cyan);
+        }
+        .records-list {
+            list-style: none;
+            padding: 0;
+        }
+        .records-list li {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px;
+            border-bottom: 1px solid rgba(255,255,255,0.05);
+        }
+        .records-list li:last-child {
+            border-bottom: none;
+        }
+        .records-list .level-name {
+            color: #fff;
+        }
+        .records-list .level-percent {
+            color: var(--accent-cyan);
+            font-weight: 700;
         }
 
         @media (max-width: 768px) {
@@ -513,6 +610,7 @@
 
             .records-grid { grid-template-columns: 1fr; }
             .detail-stats { grid-template-columns: 1fr; }
+            .player-stats { flex-direction: column; gap: 20px; }
         }
 
         @media (max-width: 400px) {
@@ -546,6 +644,7 @@
                 </div>
             </div>
             <button class="nav-item" onclick="openSection('recordsSection')" id="navRecords">Рекорды</button>
+            <button class="nav-item" onclick="openSection('rankingsSection')" id="navRankings">Топ игроков</button>
             <button class="btn-download-nav" onclick="openSection('downloadSection')">
                 <i class="fas fa-download"></i> <span id="navDownloadText">Скачать</span>
             </button>
@@ -565,17 +664,24 @@
         <button class="m-btn" onclick="openSection('homeSection'); closeBurger();">
             <i class="fas fa-home"></i> Главная
         </button>
-        <button class="m-btn" onclick="openSection('listSection'); switchTab('demons'); closeBurger();">
-            <i class="fas fa-list"></i> Demon List
-        </button>
-        <button class="m-btn" onclick="openSection('listSection'); switchTab('creators'); closeBurger();">
-            <i class="fas fa-star"></i> Creator Top
-        </button>
-        <button class="m-btn" onclick="openSection('listSection'); switchTab('challenges'); closeBurger();">
-            <i class="fas fa-tasks"></i> Челлендж лист
-        </button>
+        
+        <div style="position: relative; width: 100%;">
+            <button class="m-btn" onclick="toggleMobileSubmenu('listsSubmenu')" style="display: flex; justify-content: space-between;">
+                <span><i class="fas fa-list"></i> Списки</span>
+                <i class="fas fa-caret-down" id="listsSubmenuIcon"></i>
+            </button>
+            <div id="listsSubmenu" style="display: none; padding-left: 20px;">
+                <button class="m-btn" onclick="openSection('listSection'); switchTab('demons'); closeBurger();" style="font-size:0.85rem;">Demon List</button>
+                <button class="m-btn" onclick="openSection('listSection'); switchTab('creators'); closeBurger();" style="font-size:0.85rem;">Creator Top</button>
+                <button class="m-btn" onclick="openSection('listSection'); switchTab('challenges'); closeBurger();" style="font-size:0.85rem;">Челлендж лист</button>
+            </div>
+        </div>
+
         <button class="m-btn" onclick="openSection('recordsSection'); closeBurger();">
             <i class="fas fa-trophy"></i> Рекорды
+        </button>
+        <button class="m-btn" onclick="openSection('rankingsSection'); closeBurger();">
+            <i class="fas fa-chart-line"></i> Топ игроков
         </button>
         <button class="m-btn green" onclick="openSection('downloadSection'); closeBurger();">
             <i class="fas fa-download"></i> Скачать игру
@@ -600,10 +706,10 @@
         <section class="home-video-section">
             <div class="home-video-label">
                 <span class="home-video-line"></span>
-                <span class="home-video-tag"><i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>СМОТРЕТЬ НА YOUTUBE</span>
+                <span class="home-video-tag" id="videoTag"><i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>СМОТРЕТЬ НА YOUTUBE</span>
                 <span class="home-video-line"></span>
             </div>
-            <h2 class="home-video-title">Alex GDPS 2025 AWARDS</h2>
+            <h2 class="home-video-title" id="videoTitle">ИСТОРИЯ ALEX GDPS</h2>
             <div class="home-video-wrapper">
                 <iframe src="https://www.youtube.com/embed/E6MWW70jUso" title="Alex GDPS 2025 AWARDS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
@@ -659,7 +765,7 @@
 
     <main id="recordsSection" class="section-page">
         <div class="hero-title">
-            <h2>РЕКОРДЫ ИГРОКОВ</h2>
+            <h2 id="recordsTitle">РЕКОРДЫ ИГРОКОВ</h2>
             <div class="top-50-text">SUBMIT YOUR RECORD</div>
         </div>
         <div class="records-container">
@@ -667,6 +773,38 @@
                 <i class="fas fa-plus-circle"></i> ПОДАТЬ РЕКОРД
             </button>
             <div id="recordsList" class="records-grid"></div>
+        </div>
+    </main>
+
+    <main id="rankingsSection" class="section-page">
+        <div class="hero-title">
+            <h2 id="rankingsTitle">ТОП ИГРОКОВ</h2>
+            <div class="top-50-text">PLAYER RANKINGS</div>
+        </div>
+        <div class="rankings-container">
+            <table class="rankings-table" id="rankingsTable">
+                <thead>
+                    <tr>
+                        <th>#</th>
+                        <th>Ник</th>
+                        <th>Счёт</th>
+                        <th>Hardest</th>
+                    </tr>
+                </thead>
+                <tbody id="rankingsBody">
+                    <!-- будут заполняться динамически -->
+                </tbody>
+            </table>
+        </div>
+    </main>
+
+    <main id="playerProfileSection" class="section-page">
+        <div class="hero-title">
+            <h2 id="playerProfileTitle">ПРОФИЛЬ ИГРОКА</h2>
+            <div class="top-50-text" id="playerProfileNick"></div>
+        </div>
+        <div class="player-profile" id="playerProfileContent">
+            <!-- заполняется динамически -->
         </div>
     </main>
 
@@ -716,7 +854,6 @@
                     <input type="text" id="itemVerifier" placeholder="Верифер">
                     <input type="text" id="itemImgURL" placeholder="Ссылка на картинку">
                     <input type="text" id="itemVid" placeholder="Ссылка на YouTube">
-                    <!-- Новые поля для детальной информации -->
                     <input type="text" id="itemPassword" placeholder="Пароль (необязательно)">
                     <input type="text" id="itemLength" placeholder="Длина (напр. 0:50)">
                     <input type="text" id="itemObjects" placeholder="Объекты (напр. 20 251)">
@@ -741,26 +878,17 @@
 
     <div id="detailModal" class="modal"><div class="modal-content" id="modalData"></div></div>
 
-    <!-- Модальное окно для подачи рекорда -->
+    <!-- Модальное окно для подачи рекорда (без выбора типа) -->
     <div id="recordModal" class="record-modal">
         <button onclick="closeRecordModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:8px;background:rgba(255,70,70,0.13);border:1px solid rgba(255,70,70,0.3);color:#ff6868;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
             <i class="fas fa-times"></i>
         </button>
         <h2 id="recordModalTitle">ПОДАТЬ РЕКОРД</h2>
 
-        <!-- Выбор типа -->
-        <div style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
-            <label style="color: var(--accent-cyan);">
-                <input type="radio" name="recordType" value="demon" checked onchange="switchRecordType()"> <span id="radioDemon">Демон</span>
-            </label>
-            <label style="color: var(--accent-cyan);">
-                <input type="radio" name="recordType" value="challenge" onchange="switchRecordType()"> <span id="radioChallenge">Челлендж</span>
-            </label>
-        </div>
-
         <input type="text" id="recordProof" placeholder="Ссылка на прохождение (YouTube)" required>
         <input type="text" id="recordRaw" placeholder="Raw footage (ссылка на Google Drive)" required>
-        <input type="text" id="recordNickname" placeholder="Твой ник (игровое имя)" required>
+        <input type="text" id="recordNickname" placeholder="Твой ник (только латиница, цифры, _)" pattern="[a-zA-Z0-9_]+" required>
+        <div id="nicknameError" style="color:#ff6868; font-size:0.85rem; display:none;">Ник может содержать только латиницу, цифры и подчёркивание</div>
         <select id="recordLevel" required>
             <option value="">Выберите уровень</option>
         </select>
@@ -797,8 +925,10 @@
         let demons = [];
         let creators = [];
         let challenges = [];
+        let players = {};
 
         const recordsRef = db.ref('recordRequests');
+        const playersRef = db.ref('players');
 
         // ================== Переводы ==================
         const translations = {
@@ -806,13 +936,14 @@
                 navHome: "Главная",
                 navListsText: "Списки",
                 navRecords: "Рекорды",
+                navRankings: "Топ игроков",
                 navDownloadText: "Скачать",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.",
                 btnPlay: "СКАЧАТЬ ИГРУ",
                 btnList: "DEMON LIST",
                 videoTag: "СМОТРЕТЬ НА YOUTUBE",
-                videoTitle: "Alex GDPS 2025 AWARDS",
+                videoTitle: "ИСТОРИЯ ALEX GDPS",
                 dlTitle: "СКАЧАТЬ ИГРУ",
                 dlVersion: "Версия 2.2081",
                 dlDescPC: "Скачать .zip архив для игры на компьютере",
@@ -828,13 +959,13 @@
                 creatorTop: "ТОП КРЕАТОРОВ",
                 top50: "TOP 50",
                 recordsTitle: "РЕКОРДЫ ИГРОКОВ",
+                rankingsTitle: "ТОП ИГРОКОВ",
+                playerProfileTitle: "ПРОФИЛЬ ИГРОКА",
                 submitRecord: "ПОДАТЬ РЕКОРД",
                 recordModalTitle: "ПОДАТЬ РЕКОРД",
-                radioDemon: "Демон",
-                radioChallenge: "Челлендж",
                 recordProof: "Ссылка на прохождение (YouTube)",
                 recordRaw: "Raw footage (ссылка на Google Drive)",
-                recordNickname: "Твой ник (игровое имя)",
+                recordNickname: "Твой ник (только латиница, цифры, _)",
                 recordLevel: "Выберите уровень",
                 recordWish: "Пожелание (необязательно)",
                 recordPercent: "Рекорд (проценты, до 100)",
@@ -882,19 +1013,23 @@
                 versionPlaceholder: "Версия (напр. 1.9)",
                 scorePlaceholder: "Счёт (напр. 0.60)",
                 execute: "ВЫПОЛНИТЬ",
-                noPending: "Нет ожидающих рекордов"
+                noPending: "Нет ожидающих рекордов",
+                rank: "Ранг",
+                hardest: "Hardest",
+                unbounded: "Пройденные уровни"
             },
             EN: {
                 navHome: "Home",
                 navListsText: "Lists",
                 navRecords: "Records",
+                navRankings: "Player Rankings",
                 navDownloadText: "Download",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Dive into the world of the most ambitious Geometry Dash private server. Stability, unique levels, and the strongest community.",
                 btnPlay: "DOWNLOAD GAME",
                 btnList: "DEMON LIST",
                 videoTag: "WATCH ON YOUTUBE",
-                videoTitle: "Alex GDPS 2025 AWARDS",
+                videoTitle: "STORY OF ALEX GDPS",
                 dlTitle: "DOWNLOAD GAME",
                 dlVersion: "Version 2.2081",
                 dlDescPC: "Download .zip archive to play on PC",
@@ -910,13 +1045,13 @@
                 creatorTop: "CREATOR TOP",
                 top50: "TOP 50",
                 recordsTitle: "PLAYER RECORDS",
+                rankingsTitle: "PLAYER RANKINGS",
+                playerProfileTitle: "PLAYER PROFILE",
                 submitRecord: "SUBMIT RECORD",
                 recordModalTitle: "SUBMIT RECORD",
-                radioDemon: "Demon",
-                radioChallenge: "Challenge",
                 recordProof: "YouTube Proof Link",
                 recordRaw: "Raw footage (Google Drive link)",
-                recordNickname: "Your nickname",
+                recordNickname: "Your nickname (latin, digits, _ only)",
                 recordLevel: "Select level",
                 recordWish: "Wish (optional)",
                 recordPercent: "Record (percentage, up to 100)",
@@ -964,7 +1099,10 @@
                 versionPlaceholder: "Version (e.g. 1.9)",
                 scorePlaceholder: "Score (e.g. 0.60)",
                 execute: "EXECUTE",
-                noPending: "No pending records"
+                noPending: "No pending records",
+                rank: "Rank",
+                hardest: "Hardest",
+                unbounded: "Unbounded levels"
             }
         };
 
@@ -974,13 +1112,14 @@
             document.getElementById('navHome').innerText = t.navHome;
             document.getElementById('navListsText').innerHTML = `${t.navListsText} <i class="fas fa-caret-down"></i>`;
             document.getElementById('navRecords').innerText = t.navRecords;
+            document.getElementById('navRankings').innerText = t.navRankings;
             document.getElementById('navDownloadText').innerText = t.navDownloadText;
             document.getElementById('welcomeTitle').innerText = t.welcomeTitle;
             document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
             document.getElementById('btnPlay').innerText = t.btnPlay;
             document.getElementById('btnList').innerText = t.btnList;
-            document.querySelector('.home-video-tag').innerHTML = `<i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>${t.videoTag}`;
-            document.querySelector('.home-video-title').innerText = t.videoTitle;
+            document.getElementById('videoTag').innerHTML = `<i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>${t.videoTag}`;
+            document.getElementById('videoTitle').innerText = t.videoTitle;
             document.getElementById('dlTitle').innerText = t.dlTitle;
             document.getElementById('dlVersion').innerText = t.dlVersion;
             document.getElementById('dlDescPC').innerText = t.dlDescPC;
@@ -991,10 +1130,9 @@
             document.getElementById('searchModeTag').innerText = t.searchModeTag;
             document.getElementById('searchInput').placeholder = t.searchPlaceholder;
             document.getElementById('recordsTitle').innerText = t.recordsTitle;
+            document.getElementById('rankingsTitle').innerText = t.rankingsTitle;
             document.querySelector('.submit-record-btn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.submitRecord}`;
             document.getElementById('recordModalTitle').innerText = t.recordModalTitle;
-            document.getElementById('radioDemon').innerText = t.radioDemon;
-            document.getElementById('radioChallenge').innerText = t.radioChallenge;
             document.getElementById('recordProof').placeholder = t.recordProof;
             document.getElementById('recordRaw').placeholder = t.recordRaw;
             document.getElementById('recordNickname').placeholder = t.recordNickname;
@@ -1002,8 +1140,8 @@
             document.getElementById('recordWish').placeholder = t.recordWish;
             document.getElementById('recordPercent').placeholder = t.recordPercent;
             document.getElementById('submitRecordBtn').innerText = t.submitRecordBtn;
-            // Заголовки в списках обновятся при рендере
             render();
+            loadRankings();
         }
 
         // ================== Инициализация состояния админа ==================
@@ -1046,12 +1184,26 @@
             closeBurger();
             if (id === 'recordsSection') {
                 loadRecords();
+            } else if (id === 'rankingsSection') {
+                loadRankings();
             }
         }
 
         function toggleDropdown(id, event) {
             event.stopPropagation();
             document.getElementById(id).classList.toggle('show');
+        }
+
+        function toggleMobileSubmenu(id) {
+            const submenu = document.getElementById(id);
+            const icon = document.getElementById(id + 'Icon');
+            if (submenu.style.display === 'none') {
+                submenu.style.display = 'block';
+                if (icon) icon.style.transform = 'rotate(180deg)';
+            } else {
+                submenu.style.display = 'none';
+                if (icon) icon.style.transform = 'rotate(0deg)';
+            }
         }
 
         window.onclick = function(event) {
@@ -1077,6 +1229,12 @@
             const val = s.val();
             challenges = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
             render();
+        });
+
+        playersRef.on('value', s => {
+            players = s.val() || {};
+            render();
+            loadRankings();
         });
 
         function setSearchMode(mode) {
@@ -1253,7 +1411,7 @@
             if (confirm('Удалить элемент?')) db.ref(path + '/' + key).remove();
         }
 
-        // ================== Просмотр деталей (обновлён) ==================
+        // ================== Просмотр деталей ==================
         function showInfoByKey(key, type) {
             const item = type === 'demon' ? demons.find(x => x.key === key) : challenges.find(x => x.key === key);
             if (!item) return;
@@ -1454,7 +1612,6 @@
             document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') ? 'block' : 'none';
             document.getElementById('fields_victor').style.display = (a === 'add_victor' || a === 'add_challenge_victor') ? 'block' : 'none';
 
-            // Обновляем плейсхолдеры в админке в зависимости от языка
             const t = translations[currentLang];
             document.getElementById('itemName').placeholder = t.namePlaceholder;
             document.getElementById('itemVal').placeholder = t.authorPlaceholder;
@@ -1479,7 +1636,7 @@
             }
         }
 
-        // ================== Модерация рекордов ==================
+        // ================== Модерация рекордов (только для демонов) ==================
         function loadPendingRecords() {
             recordsRef.orderByChild('timestamp').once('value', snapshot => {
                 const container = document.getElementById('moderationContainer');
@@ -1490,11 +1647,9 @@
                     const rec = child.val();
                     if (rec.status === 'pending') {
                         hasPending = true;
-                        const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
                         const item = document.createElement('div');
                         item.className = 'moderation-item';
                         item.innerHTML = `
-                            <p><strong>${t.radioDemon}:</strong> ${typeDisplay}</p>
                             <p><strong>${t.recordLevel}:</strong> ${escapeHtml(rec.levelName)}</p>
                             <p><strong>${t.recordNickname}:</strong> ${escapeHtml(rec.nickname)}</p>
                             <p><strong>${t.recordPercent}:</strong> ${rec.percent}%</p>
@@ -1503,7 +1658,7 @@
                             ${rec.wish ? `<p><strong>Пожелание:</strong> ${escapeHtml(rec.wish)}</p>` : ''}
                             <p><strong>Дата:</strong> ${new Date(rec.timestamp).toLocaleString()}</p>
                             <div class="moderation-buttons">
-                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.itemType || 'demon'}')">✅ ${t.statusApproved}</button>
+                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.levelName.replace(/'/g, "\\'")}')">✅ ${t.statusApproved}</button>
                                 <button class="btn-reject" onclick="rejectRecord('${child.key}')">❌ ${t.statusRejected}</button>
                             </div>
                         `;
@@ -1514,15 +1669,56 @@
             });
         }
 
-        function approveRecord(recordKey, levelKey, nickname, percent, type) {
-            if (!confirm('Принять этот рекорд? Он будет добавлен в victors.')) return;
+        function getLevelWeight(levelKey) {
+            const index = demons.findIndex(i => i.key === levelKey);
+            if (index === -1) return 0;
+            return Math.round((1000 / (index + 1)) * 100) / 100;
+        }
+
+        function approveRecord(recordKey, levelKey, nickname, percent, levelName) {
+            if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
+
+            if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+                alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
+                return;
+            }
+
+            const weight = getLevelWeight(levelKey);
             const victorData = { name: nickname, perc: percent + '%', att: '0' };
-            const path = type === 'challenge' ? `challenges/${levelKey}/victors` : `demons/${levelKey}/victors`;
+            const path = `demons/${levelKey}/victors`;
+
             db.ref(path).push(victorData)
-                .then(() => db.ref(`recordRequests/${recordKey}`).remove())
+                .then(() => {
+                    return playersRef.child(nickname).once('value').then(snap => {
+                        const player = snap.val() || { score: 0, hardest: null, records: {} };
+                        if (player.records && player.records[levelKey]) {
+                            alert('Этот игрок уже проходил данный уровень! Рекорд принят, но очки не начислены повторно.');
+                        } else {
+                            const newRecord = {
+                                levelKey,
+                                levelName,
+                                type: 'demon',
+                                percent,
+                                timestamp: firebase.database.ServerValue.TIMESTAMP
+                            };
+                            player.records = player.records || {};
+                            player.records[levelKey] = newRecord;
+                            player.score = (player.score || 0) + weight;
+                            const hardestWeight = getLevelWeight(player.hardest?.levelKey) || 0;
+                            if (weight > hardestWeight) {
+                                player.hardest = { levelKey, levelName, type: 'demon' };
+                            }
+                        }
+                        return playersRef.child(nickname).set(player);
+                    });
+                })
+                .then(() => {
+                    return db.ref(`recordRequests/${recordKey}`).remove();
+                })
                 .then(() => {
                     alert('Рекорд принят!');
                     loadPendingRecords();
+                    loadRankings();
                 })
                 .catch(err => alert('Ошибка: ' + err.message));
         }
@@ -1535,21 +1731,82 @@
             });
         }
 
-        // ================== Подача рекорда ==================
-        function switchRecordType() {
-            const type = document.querySelector('input[name="recordType"]:checked').value;
-            const select = document.getElementById('recordLevel');
-            select.innerHTML = '<option value="">' + translations[currentLang].recordLevel + '</option>';
-            let items = type === 'demon' ? demons : challenges;
-            items.forEach(item => {
-                select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
+        // ================== Рейтинг игроков ==================
+        function loadRankings() {
+            const t = translations[currentLang];
+            playersRef.once('value', snapshot => {
+                const playersData = snapshot.val() || {};
+                const playersList = Object.entries(playersData).map(([nick, data]) => ({
+                    nick,
+                    score: data.score || 0,
+                    hardest: data.hardest?.levelName || '—'
+                }));
+                playersList.sort((a, b) => b.score - a.score);
+                const tbody = document.getElementById('rankingsBody');
+                tbody.innerHTML = '';
+                playersList.forEach((player, index) => {
+                    const row = document.createElement('tr');
+                    row.innerHTML = `
+                        <td>#${index + 1}</td>
+                        <td class="clickable" onclick="openPlayerProfile('${player.nick}')">${escapeHtml(player.nick)}</td>
+                        <td>${player.score.toFixed(2)}</td>
+                        <td>${escapeHtml(player.hardest)}</td>
+                    `;
+                    tbody.appendChild(row);
+                });
+                if (playersList.length === 0) {
+                    tbody.innerHTML = `<tr><td colspan="4" style="text-align:center;">${t.noRecords}</td></tr>`;
+                }
             });
         }
 
+        function openPlayerProfile(nick) {
+            document.getElementById('playerProfileNick').innerText = nick;
+            playersRef.child(nick).once('value', snapshot => {
+                const player = snapshot.val() || { score: 0, records: {} };
+                const t = translations[currentLang];
+                const recordsList = Object.values(player.records || {}).sort((a, b) => b.timestamp - a.timestamp);
+                const hardest = player.hardest?.levelName || '—';
+                const content = `
+                    <div class="player-header">
+                        <h2>${escapeHtml(nick)}</h2>
+                        <div class="player-stats">
+                            <div class="player-stat">
+                                <div class="label">${t.score}</div>
+                                <div class="value">${(player.score || 0).toFixed(2)}</div>
+                            </div>
+                            <div class="player-stat">
+                                <div class="label">${t.hardest}</div>
+                                <div class="value">${escapeHtml(hardest)}</div>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="player-records">
+                        <h3>${t.unbounded}</h3>
+                        <ul class="records-list">
+                            ${recordsList.map(rec => `
+                                <li>
+                                    <span class="level-name">${escapeHtml(rec.levelName)}</span>
+                                    <span class="level-percent">${rec.percent}%</span>
+                                </li>
+                            `).join('')}
+                        </ul>
+                    </div>
+                `;
+                document.getElementById('playerProfileContent').innerHTML = content;
+                openSection('playerProfileSection');
+            });
+        }
+
+        // ================== Подача рекорда (только демоны) ==================
         function openRecordModal() {
-            document.querySelector('input[value="demon"]').checked = true;
-            switchRecordType();
+            const select = document.getElementById('recordLevel');
+            select.innerHTML = '<option value="">' + translations[currentLang].recordLevel + '</option>';
+            demons.forEach(item => {
+                select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
+            });
             document.getElementById('recordModal').style.display = 'block';
+            document.getElementById('nicknameError').style.display = 'none';
         }
 
         function closeRecordModal() {
@@ -1569,7 +1826,13 @@
             const levelKey = document.getElementById('recordLevel').value;
             const wish = document.getElementById('recordWish').value.trim();
             const percent = parseInt(document.getElementById('recordPercent').value, 10);
-            const type = document.querySelector('input[name="recordType"]:checked').value;
+
+            if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+                document.getElementById('nicknameError').style.display = 'block';
+                return;
+            } else {
+                document.getElementById('nicknameError').style.display = 'none';
+            }
 
             if (!proof || !raw || !nickname || !levelKey || isNaN(percent)) {
                 alert('Заполните все обязательные поля');
@@ -1582,12 +1845,10 @@
                 document.getElementById('recordError').style.display = 'none';
             }
 
-            const levelName = type === 'demon'
-                ? (demons.find(d => d.key === levelKey)?.name || 'Неизвестно')
-                : (challenges.find(c => c.key === levelKey)?.name || 'Неизвестно');
+            const levelName = demons.find(d => d.key === levelKey)?.name || 'Неизвестно';
 
             const recordData = {
-                nickname, proof, raw, levelKey, itemType: type,
+                nickname, proof, raw, levelKey, itemType: 'demon',
                 levelName, wish: wish || '', percent,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 status: 'pending'
@@ -1611,12 +1872,11 @@
                 const t = translations[currentLang];
                 container.innerHTML = '';
                 records.forEach(rec => {
-                    const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
                     const statusText = rec.status === 'pending' ? t.statusPending : (rec.status === 'approved' ? t.statusApproved : t.statusRejected);
                     const card = document.createElement('div');
                     card.className = 'record-card';
                     card.innerHTML = `
-                        <h3>${escapeHtml(rec.levelName)} <span style="font-size:0.7rem; color:#888;">(${typeDisplay})</span></h3>
+                        <h3>${escapeHtml(rec.levelName)}</h3>
                         <p><i class="fas fa-user"></i> ${escapeHtml(rec.nickname || 'Аноним')}</p>
                         <p class="percentage">${rec.percent}%</p>
                         <p><i class="fab fa-youtube"></i> <a href="${rec.proof}" target="_blank">Прохождение</a></p>
@@ -1630,13 +1890,11 @@
             });
         }
 
-        // ================== Переключение вкладок списков ==================
         function switchTab(tab) {
             currentTab = tab;
             render();
         }
 
-        // ================== Копирование ==================
         function copyGDPS() {
             const text = "alexgdops.ps.fhgdps.com";
             navigator.clipboard.writeText(text).then(() => {
@@ -1644,7 +1902,7 @@
                 toast.innerText = translations[currentLang].gdpsCopied;
                 toast.className = 'show';
                 setTimeout(() => toast.className = '', 2000);
-            }).catch(() => alert('Не удалось скопировать'));
+            }).catch(() => alert('Не удалось копировать'));
         }
 
         function copyID(id) {
@@ -1655,16 +1913,13 @@
             setTimeout(() => t.className = "", 3000);
         }
 
-        // ================== Перевод ==================
         function toggleLang() {
             currentLang = currentLang === 'RU' ? 'EN' : 'RU';
             document.getElementById('langBtn').innerText = currentLang;
             applyTranslations();
-            // Обновить плейсхолдеры в админке (они могут быть видны)
-            toggleAdmFields(); // это обновит плейсхолдеры
+            toggleAdmFields();
         }
 
-        // ================== Техперерыв ==================
         db.ref('maintenance').on('value', s => {
             const on = s.val() === true;
             const overlay = document.getElementById('maintenanceOverlay');
@@ -1677,7 +1932,6 @@
             }
         });
 
-        // ================== Инициализация перевода при загрузке ==================
         window.addEventListener('load', () => {
             applyTranslations();
         });
