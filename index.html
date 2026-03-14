@@ -13,7 +13,6 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили без изменений – они уже были в предыдущей версии */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -570,7 +569,15 @@
             font-weight: 700;
         }
 
-        /* Стили для раздела изменений */
+        .clickable-level {
+            cursor: pointer;
+            color: var(--accent-cyan);
+            text-decoration: underline;
+        }
+        .clickable-level:hover {
+            color: #fff;
+        }
+
         .changes-container {
             max-width: 1000px;
             margin: 0 auto;
@@ -855,7 +862,6 @@
         </div>
     </main>
 
-    <!-- Новая секция: Изменения -->
     <main id="changesSection" class="section-page">
         <div class="hero-title">
             <h2 id="changesTitle">ПОСЛЕДНИЕ ИЗМЕНЕНИЯ</h2>
@@ -1009,7 +1015,7 @@
 
         const recordsRef = db.ref('recordRequests');
         const playersRef = db.ref('players');
-        const changesRef = db.ref('changes'); // новый узел для изменений
+        const changesRef = db.ref('changes');
 
         // ================== Переводы ==================
         const translations = {
@@ -1245,7 +1251,7 @@
             document.getElementById('submitRecordBtn').innerText = t.submitRecordBtn;
             render();
             loadRankings();
-            loadChanges(); // загрузить изменения
+            loadChanges();
         }
 
         // ================== Инициализация состояния админа ==================
@@ -1483,6 +1489,7 @@
             const oldIndex = draggedIndex;
             const newIndex = targetIndex;
             const levelName = items[oldIndex].name;
+            const levelKey = items[oldIndex].key;
             const oldPos = oldIndex + 1;
             const newPos = newIndex + 1;
 
@@ -1500,8 +1507,7 @@
 
             db.ref().update(updates).then(() => {
                 showToast('Порядок обновлён!');
-                // Логируем перемещение
-                logChange('move', levelName, oldPos, newPos, type, newItems);
+                logChange('move', levelName, levelKey, oldPos, newPos, type, newItems);
             });
             draggedIndex = -1;
         }
@@ -1520,6 +1526,7 @@
             if (target < 0 || target >= items.length) return;
 
             const levelName = items[index].name;
+            const levelKey = items[index].key;
             const oldPos = index + 1;
             const newPos = target + 1;
 
@@ -1527,52 +1534,52 @@
             updates[`/${type}s/${items[index].key}/order`] = target;
             updates[`/${type}s/${items[target].key}/order`] = index;
             db.ref().update(updates).then(() => {
-                // Логируем перемещение
-                logChange('move', levelName, oldPos, newPos, type, items); // items ещё старые, но после обновления придут новые
+                // Логируем перемещение (после обновления получим новый список через on, но для простоты пока не логируем)
+                // Можно также вызвать logChange, но тогда нужно получить новый список
             });
         }
 
         function deleteItem(key, path) {
             if (!confirm('Удалить элемент?')) return;
 
-            // Определяем тип и имя перед удалением
-            let type, levelName, oldPos;
+            let type, levelName, levelKey, oldPos;
             if (path === 'demons') {
                 const item = demons.find(i => i.key === key);
-                if (item) { levelName = item.name; oldPos = demons.findIndex(i => i.key === key) + 1; type = 'demon'; }
+                if (item) { levelName = item.name; levelKey = item.key; oldPos = demons.findIndex(i => i.key === key) + 1; type = 'demon'; }
             } else if (path === 'challenges') {
                 const item = challenges.find(i => i.key === key);
-                if (item) { levelName = item.name; oldPos = challenges.findIndex(i => i.key === key) + 1; type = 'challenge'; }
+                if (item) { levelName = item.name; levelKey = item.key; oldPos = challenges.findIndex(i => i.key === key) + 1; type = 'challenge'; }
             }
 
             db.ref(path + '/' + key).remove().then(() => {
                 if (type && levelName) {
-                    logChange('remove', levelName, oldPos, null, type, []);
+                    const ref = type === 'demon' ? db.ref('demons') : db.ref('challenges');
+                    ref.once('value', s => {
+                        const newItems = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
+                        logChange('remove', levelName, levelKey, oldPos, null, type, newItems);
+                    });
                 }
             });
         }
 
         // ================== Логирование изменений ==================
-        function logChange(action, levelName, oldPos, newPos, type, itemsAfter) {
-            // Определяем соседей
+        function logChange(action, levelName, levelKey, oldPos, newPos, type, itemsAfter) {
             let above = null, below = null;
             if (action === 'place' || action === 'move') {
                 const pos = action === 'place' ? newPos : newPos;
-                const list = itemsAfter; // уже отсортированный массив
-                if (pos > 1) above = list[pos - 2]?.name || null; // индекс в массиве = pos-1
+                const list = itemsAfter;
+                if (pos > 1) above = list[pos - 2]?.name || null;
                 if (pos < list.length) below = list[pos]?.name || null;
             } else if (action === 'remove') {
-                // При удалении соседей определить сложно, можно по старому списку, но у нас его нет.
-                // Пропустим или получим из itemsAfter (уже без удалённого) – тогда соседи те, между которыми был.
-                // itemsAfter после удаления, значит на позиции oldPos-1 теперь уровень, который был на oldPos+1.
-                if (oldPos > 1) above = itemsAfter[oldPos - 2]?.name || null; // бывший выше
-                below = itemsAfter[oldPos - 1]?.name || null; // бывший ниже
+                if (oldPos > 1) above = itemsAfter[oldPos - 2]?.name || null;
+                below = itemsAfter[oldPos - 1]?.name || null;
             }
 
             const change = {
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 action: action,
                 levelName: levelName,
+                levelKey: levelKey,
                 listType: type,
                 oldPos: oldPos || null,
                 newPos: newPos || null,
@@ -1589,7 +1596,7 @@
                 snapshot.forEach(child => {
                     changes.push({ key: child.key, ...child.val() });
                 });
-                changes.sort((a, b) => b.timestamp - a.timestamp); // от новых к старым
+                changes.sort((a, b) => b.timestamp - a.timestamp);
 
                 const container = document.getElementById('changesList');
                 const t = translations[currentLang];
@@ -1597,17 +1604,18 @@
                 changes.forEach(change => {
                     const date = new Date(change.timestamp).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
                     let icon, text;
+                    const levelSpan = `<span class="clickable-level" onclick="showInfoByKey('${change.levelKey}', '${change.listType}')">${escapeHtml(change.levelName)}</span>`;
                     if (change.action === 'place') {
                         icon = 'fa-plus-circle';
-                        text = `${change.levelName} ${t.changePlace.replace('{pos}', change.newPos)}`;
+                        text = `${levelSpan} ${t.changePlace.replace('{pos}', change.newPos)}`;
                         if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
                         if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
                     } else if (change.action === 'remove') {
                         icon = 'fa-minus-circle';
-                        text = `${change.levelName} ${t.changeRemove.replace('{pos}', change.oldPos)}`;
+                        text = `${levelSpan} ${t.changeRemove.replace('{pos}', change.oldPos)}`;
                     } else if (change.action === 'move') {
                         icon = 'fa-arrows-up-down';
-                        text = `${change.levelName} ${t.changeMove.replace('{oldPos}', change.oldPos).replace('{newPos}', change.newPos)}`;
+                        text = `${levelSpan} ${t.changeMove.replace('{oldPos}', change.oldPos).replace('{newPos}', change.newPos)}`;
                         if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
                         if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
                     }
@@ -1764,14 +1772,12 @@
                     score: document.getElementById('itemScore').value,
                     order: demons.length
                 };
-                db.ref('demons').push(newDemon).then(() => {
-                    // После добавления логгируем
+                db.ref('demons').push(newDemon).then((ref) => {
                     setTimeout(() => {
-                        // Нужно получить обновлённый список демонов
                         db.ref('demons').once('value', s => {
-                            const newDemons = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+                            const newDemons = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                             const newPos = newDemons.findIndex(d => d.name === name) + 1;
-                            logChange('place', name, null, newPos, 'demon', newDemons);
+                            logChange('place', name, ref.key, null, newPos, 'demon', newDemons);
                         });
                     }, 500);
                 });
@@ -1792,12 +1798,12 @@
                     score: document.getElementById('itemScore').value,
                     order: challenges.length
                 };
-                db.ref('challenges').push(newChallenge).then(() => {
+                db.ref('challenges').push(newChallenge).then((ref) => {
                     setTimeout(() => {
                         db.ref('challenges').once('value', s => {
-                            const newChallenges = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+                            const newChallenges = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                             const newPos = newChallenges.findIndex(c => c.name === name) + 1;
-                            logChange('place', name, null, newPos, 'challenge', newChallenges);
+                            logChange('place', name, ref.key, null, newPos, 'challenge', newChallenges);
                         });
                     }, 500);
                 });
@@ -1873,7 +1879,7 @@
             }
         }
 
-        // ================== Модерация рекордов (с учётом типа) ==================
+        // ================== Модерация рекордов ==================
         function loadPendingRecords() {
             recordsRef.orderByChild('timestamp').once('value', snapshot => {
                 const container = document.getElementById('moderationContainer');
@@ -1909,12 +1915,12 @@
         }
 
         function getLevelWeight(levelKey, type) {
-    const items = type === 'demon' ? demons : challenges;
-    const item = items.find(i => i.key === levelKey);
-    if (!item) return 0;
-    const weight = parseFloat(item.score);
-    return isNaN(weight) ? 0 : weight;
-}
+            const items = type === 'demon' ? demons : challenges;
+            const item = items.find(i => i.key === levelKey);
+            if (!item) return 0;
+            const weight = parseFloat(item.score);
+            return isNaN(weight) ? 0 : weight;
+        }
 
         function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
             if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
@@ -2027,7 +2033,7 @@
                         <ul class="records-list">
                             ${recordsList.map(rec => `
                                 <li>
-                                    <span class="level-name">${escapeHtml(rec.levelName)} (${rec.type === 'challenge' ? t.radioChallenge : t.radioDemon})</span>
+                                    <span class="clickable-level" onclick="showInfoByKey('${rec.levelKey}', '${rec.type}')">${escapeHtml(rec.levelName)}</span> (${rec.type === 'challenge' ? t.radioChallenge : t.radioDemon})
                                     <span class="level-percent">${rec.percent}%</span>
                                 </li>
                             `).join('')}
