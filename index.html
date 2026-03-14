@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили без изменений (можно оставить как в предыдущей версии) */
+        /* Все стили без изменений – они уже были в предыдущей версии */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -878,12 +878,22 @@
 
     <div id="detailModal" class="modal"><div class="modal-content" id="modalData"></div></div>
 
-    <!-- Модальное окно для подачи рекорда (без выбора типа) -->
+    <!-- Модальное окно для подачи рекорда (с выбором типа) -->
     <div id="recordModal" class="record-modal">
         <button onclick="closeRecordModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:8px;background:rgba(255,70,70,0.13);border:1px solid rgba(255,70,70,0.3);color:#ff6868;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
             <i class="fas fa-times"></i>
         </button>
         <h2 id="recordModalTitle">ПОДАТЬ РЕКОРД</h2>
+
+        <!-- Выбор типа -->
+        <div style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
+            <label style="color: var(--accent-cyan);">
+                <input type="radio" name="recordType" value="demon" checked onchange="switchRecordType()"> <span id="radioDemon">Демон</span>
+            </label>
+            <label style="color: var(--accent-cyan);">
+                <input type="radio" name="recordType" value="challenge" onchange="switchRecordType()"> <span id="radioChallenge">Челлендж</span>
+            </label>
+        </div>
 
         <input type="text" id="recordProof" placeholder="Ссылка на прохождение (YouTube)" required>
         <input type="text" id="recordRaw" placeholder="Raw footage (ссылка на Google Drive)" required>
@@ -963,6 +973,8 @@
                 playerProfileTitle: "ПРОФИЛЬ ИГРОКА",
                 submitRecord: "ПОДАТЬ РЕКОРД",
                 recordModalTitle: "ПОДАТЬ РЕКОРД",
+                radioDemon: "Демон",
+                radioChallenge: "Челлендж",
                 recordProof: "Ссылка на прохождение (YouTube)",
                 recordRaw: "Raw footage (ссылка на Google Drive)",
                 recordNickname: "Твой ник (только латиница, цифры, _)",
@@ -1049,6 +1061,8 @@
                 playerProfileTitle: "PLAYER PROFILE",
                 submitRecord: "SUBMIT RECORD",
                 recordModalTitle: "SUBMIT RECORD",
+                radioDemon: "Demon",
+                radioChallenge: "Challenge",
                 recordProof: "YouTube Proof Link",
                 recordRaw: "Raw footage (Google Drive link)",
                 recordNickname: "Your nickname (latin, digits, _ only)",
@@ -1133,6 +1147,8 @@
             document.getElementById('rankingsTitle').innerText = t.rankingsTitle;
             document.querySelector('.submit-record-btn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.submitRecord}`;
             document.getElementById('recordModalTitle').innerText = t.recordModalTitle;
+            document.getElementById('radioDemon').innerText = t.radioDemon;
+            document.getElementById('radioChallenge').innerText = t.radioChallenge;
             document.getElementById('recordProof').placeholder = t.recordProof;
             document.getElementById('recordRaw').placeholder = t.recordRaw;
             document.getElementById('recordNickname').placeholder = t.recordNickname;
@@ -1636,7 +1652,7 @@
             }
         }
 
-        // ================== Модерация рекордов (только для демонов) ==================
+        // ================== Модерация рекордов (с учётом типа) ==================
         function loadPendingRecords() {
             recordsRef.orderByChild('timestamp').once('value', snapshot => {
                 const container = document.getElementById('moderationContainer');
@@ -1647,9 +1663,11 @@
                     const rec = child.val();
                     if (rec.status === 'pending') {
                         hasPending = true;
+                        const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
                         const item = document.createElement('div');
                         item.className = 'moderation-item';
                         item.innerHTML = `
+                            <p><strong>Тип:</strong> ${typeDisplay}</p>
                             <p><strong>${t.recordLevel}:</strong> ${escapeHtml(rec.levelName)}</p>
                             <p><strong>${t.recordNickname}:</strong> ${escapeHtml(rec.nickname)}</p>
                             <p><strong>${t.recordPercent}:</strong> ${rec.percent}%</p>
@@ -1658,7 +1676,7 @@
                             ${rec.wish ? `<p><strong>Пожелание:</strong> ${escapeHtml(rec.wish)}</p>` : ''}
                             <p><strong>Дата:</strong> ${new Date(rec.timestamp).toLocaleString()}</p>
                             <div class="moderation-buttons">
-                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.levelName.replace(/'/g, "\\'")}')">✅ ${t.statusApproved}</button>
+                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.itemType || 'demon'}', '${rec.levelName.replace(/'/g, "\\'")}')">✅ ${t.statusApproved}</button>
                                 <button class="btn-reject" onclick="rejectRecord('${child.key}')">❌ ${t.statusRejected}</button>
                             </div>
                         `;
@@ -1669,13 +1687,14 @@
             });
         }
 
-        function getLevelWeight(levelKey) {
-            const index = demons.findIndex(i => i.key === levelKey);
+        function getLevelWeight(levelKey, type) {
+            const items = type === 'demon' ? demons : challenges;
+            const index = items.findIndex(i => i.key === levelKey);
             if (index === -1) return 0;
             return Math.round((1000 / (index + 1)) * 100) / 100;
         }
 
-        function approveRecord(recordKey, levelKey, nickname, percent, levelName) {
+        function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
             if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
 
             if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
@@ -1683,9 +1702,9 @@
                 return;
             }
 
-            const weight = getLevelWeight(levelKey);
+            const weight = getLevelWeight(levelKey, type);
             const victorData = { name: nickname, perc: percent + '%', att: '0' };
-            const path = `demons/${levelKey}/victors`;
+            const path = type === 'challenge' ? `challenges/${levelKey}/victors` : `demons/${levelKey}/victors`;
 
             db.ref(path).push(victorData)
                 .then(() => {
@@ -1697,16 +1716,16 @@
                             const newRecord = {
                                 levelKey,
                                 levelName,
-                                type: 'demon',
+                                type,
                                 percent,
                                 timestamp: firebase.database.ServerValue.TIMESTAMP
                             };
                             player.records = player.records || {};
                             player.records[levelKey] = newRecord;
                             player.score = (player.score || 0) + weight;
-                            const hardestWeight = getLevelWeight(player.hardest?.levelKey) || 0;
+                            const hardestWeight = getLevelWeight(player.hardest?.levelKey, player.hardest?.type) || 0;
                             if (weight > hardestWeight) {
-                                player.hardest = { levelKey, levelName, type: 'demon' };
+                                player.hardest = { levelKey, levelName, type };
                             }
                         }
                         return playersRef.child(nickname).set(player);
@@ -1786,7 +1805,7 @@
                         <ul class="records-list">
                             ${recordsList.map(rec => `
                                 <li>
-                                    <span class="level-name">${escapeHtml(rec.levelName)}</span>
+                                    <span class="level-name">${escapeHtml(rec.levelName)} (${rec.type === 'challenge' ? t.radioChallenge : t.radioDemon})</span>
                                     <span class="level-percent">${rec.percent}%</span>
                                 </li>
                             `).join('')}
@@ -1798,13 +1817,20 @@
             });
         }
 
-        // ================== Подача рекорда (только демоны) ==================
-        function openRecordModal() {
+        // ================== Подача рекорда ==================
+        function switchRecordType() {
+            const type = document.querySelector('input[name="recordType"]:checked').value;
             const select = document.getElementById('recordLevel');
             select.innerHTML = '<option value="">' + translations[currentLang].recordLevel + '</option>';
-            demons.forEach(item => {
+            let items = type === 'demon' ? demons : challenges;
+            items.forEach(item => {
                 select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
             });
+        }
+
+        function openRecordModal() {
+            document.querySelector('input[value="demon"]').checked = true;
+            switchRecordType();
             document.getElementById('recordModal').style.display = 'block';
             document.getElementById('nicknameError').style.display = 'none';
         }
@@ -1826,6 +1852,7 @@
             const levelKey = document.getElementById('recordLevel').value;
             const wish = document.getElementById('recordWish').value.trim();
             const percent = parseInt(document.getElementById('recordPercent').value, 10);
+            const type = document.querySelector('input[name="recordType"]:checked').value;
 
             if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
                 document.getElementById('nicknameError').style.display = 'block';
@@ -1845,10 +1872,12 @@
                 document.getElementById('recordError').style.display = 'none';
             }
 
-            const levelName = demons.find(d => d.key === levelKey)?.name || 'Неизвестно';
+            const levelName = type === 'demon'
+                ? (demons.find(d => d.key === levelKey)?.name || 'Неизвестно')
+                : (challenges.find(c => c.key === levelKey)?.name || 'Неизвестно');
 
             const recordData = {
-                nickname, proof, raw, levelKey, itemType: 'demon',
+                nickname, proof, raw, levelKey, itemType: type,
                 levelName, wish: wish || '', percent,
                 timestamp: firebase.database.ServerValue.TIMESTAMP,
                 status: 'pending'
@@ -1872,11 +1901,12 @@
                 const t = translations[currentLang];
                 container.innerHTML = '';
                 records.forEach(rec => {
+                    const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
                     const statusText = rec.status === 'pending' ? t.statusPending : (rec.status === 'approved' ? t.statusApproved : t.statusRejected);
                     const card = document.createElement('div');
                     card.className = 'record-card';
                     card.innerHTML = `
-                        <h3>${escapeHtml(rec.levelName)}</h3>
+                        <h3>${escapeHtml(rec.levelName)} <span style="font-size:0.7rem; color:#888;">(${typeDisplay})</span></h3>
                         <p><i class="fas fa-user"></i> ${escapeHtml(rec.nickname || 'Аноним')}</p>
                         <p class="percentage">${rec.percent}%</p>
                         <p><i class="fab fa-youtube"></i> <a href="${rec.proof}" target="_blank">Прохождение</a></p>
