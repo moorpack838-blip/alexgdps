@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
+        /* Все стили остаются без изменений */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -738,6 +739,7 @@
         const auth = firebase.auth();
         const functions = firebase.functions();
 
+        // Глобальные переменные
         let currentLang = 'RU';
         let isAdmin = false;
         let isDeleteMode = false;
@@ -748,15 +750,14 @@
         let creators = [];
         let challenges = [];
 
-        let draggedItem = null;
-        let draggedIndex = -1;
-
         const recordsRef = db.ref('recordRequests');
 
+        // Инициализация состояния админа из localStorage
         if (localStorage.getItem('mxAdmin') === '1') {
             document.getElementById('admin-trigger').style.display = 'block';
         }
 
+        // Слушатель аутентификации
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
             const trigger = document.getElementById('admin-trigger');
@@ -772,6 +773,267 @@
             render();
         });
 
+        // ================== Базовые функции ==================
+        function toggleBurger() {
+            const menu = document.getElementById('mobileMenu');
+            const btn = document.getElementById('burgerBtn');
+            menu.classList.toggle('open');
+            btn.classList.toggle('open');
+        }
+        function closeBurger() {
+            document.getElementById('mobileMenu').classList.remove('open');
+            document.getElementById('burgerBtn').classList.remove('open');
+        }
+
+        function openSection(id) {
+            document.querySelectorAll('.section-page').forEach(sec => sec.classList.remove('active'));
+            document.getElementById(id).classList.add('active');
+            window.scrollTo(0, 0);
+            // Закрыть все дропдауны
+            document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
+            closeBurger();
+            if (id === 'recordsSection') {
+                loadRecords();
+            }
+        }
+
+        function toggleDropdown(id, event) {
+            event.stopPropagation();
+            document.getElementById(id).classList.toggle('show');
+        }
+
+        window.onclick = function(event) {
+            if (!event.target.matches('.nav-item') && !event.target.matches('.fa-caret-down')) {
+                document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
+            }
+        };
+
+        // Загрузка данных из Firebase
+        db.ref('demons').on('value', s => {
+            const val = s.val();
+            demons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            render();
+        });
+
+        db.ref('creators').on('value', s => {
+            const val = s.val();
+            creators = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (parseInt(b.points) || 0) - (parseInt(a.points) || 0)) : [];
+            render();
+        });
+
+        db.ref('challenges').on('value', s => {
+            const val = s.val();
+            challenges = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            render();
+        });
+
+        function setSearchMode(mode) {
+            searchMode = mode;
+            document.getElementById('searchModeMain').classList.toggle('active', mode === 'main');
+            document.getElementById('searchModeTag').classList.toggle('active', mode === 'tag');
+            render();
+        }
+
+        function showToast(message) {
+            const toast = document.getElementById('copyToast');
+            toast.innerText = message;
+            toast.className = 'show';
+            setTimeout(() => toast.className = '', 2000);
+        }
+
+        function toggleDragDropMode() {
+            isDragDropMode = !isDragDropMode;
+            const indicator = document.getElementById('dragIndicator');
+            indicator.style.display = isDragDropMode ? 'flex' : 'none';
+            render();
+            showToast(isDragDropMode ? 'Drag & Drop режим включён' : 'Drag & Drop режим выключён');
+        }
+
+        // ================== Рендер списков ==================
+        function render() {
+            const container = document.getElementById('mainContainer');
+            const query = document.getElementById('searchInput').value.toLowerCase();
+            const topBanner = document.getElementById('top50Banner');
+            container.innerHTML = '';
+
+            if (currentTab === 'demons') {
+                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'DEMON LIST' : 'СПИСОК ДЕМОНОВ';
+                topBanner.style.display = 'block';
+                const filtered = demons.filter(d => {
+                    if (searchMode === 'tag') return d.tag && d.tag.toLowerCase().includes(query);
+                    return d.name.toLowerCase().includes(query) || d.author.toLowerCase().includes(query);
+                });
+                renderCards(filtered, 'demon');
+            } else if (currentTab === 'challenges') {
+                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CHALLENGE LIST' : 'СПИСОК ЧЕЛЛЕНДЖЕЙ';
+                topBanner.style.display = 'block';
+                const filtered = challenges.filter(c => {
+                    if (searchMode === 'tag') return c.tag && c.tag.toLowerCase().includes(query);
+                    return c.name.toLowerCase().includes(query) || c.author.toLowerCase().includes(query);
+                });
+                renderCards(filtered, 'challenge');
+            } else if (currentTab === 'creators') {
+                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CREATOR TOP' : 'ТОП КРЕАТОРОВ';
+                topBanner.style.display = 'none';
+                const filtered = creators.filter(c => c.name.toLowerCase().includes(query));
+                filtered.forEach((c, i) => {
+                    container.innerHTML += `<div class="card">
+                        ${isDeleteMode ? `<div class="admin-controls"><button class="ctrl-btn btn-del" onclick="deleteItem('${c.key}', 'creators')"><i class="fas fa-trash"></i></button></div>` : ''}
+                        <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; padding:35px 40px;">
+                            <h3 style="margin:0; font-size:1.2rem; color:#fff;">#${i+1} ${escapeHtml(c.name)}</h3>
+                            <div><span style="font-size:1.5rem; color:var(--accent-cyan); font-weight:900;">${c.points} CP</span></div>
+                        </div>
+                    </div>`;
+                });
+            }
+        }
+
+        function escapeHtml(unsafe) {
+            if (!unsafe) return unsafe;
+            return unsafe.replace(/[&<>"]/g, function(m) {
+                if (m === '&') return '&amp;';
+                if (m === '<') return '&lt;';
+                if (m === '>') return '&gt;';
+                if (m === '"') return '&quot;';
+                return m;
+            });
+        }
+
+        function renderCards(items, type) {
+            const container = document.getElementById('mainContainer');
+            items.forEach((item, i) => {
+                const card = document.createElement('div');
+                card.className = 'card';
+
+                if (isDragDropMode && isAdmin) {
+                    card.setAttribute('draggable', 'true');
+                    card.setAttribute('data-index', i);
+                    card.ondragstart = (e) => handleDragStart(e, i, type);
+                    card.ondragover = (e) => handleDragOver(e, i, type);
+                    card.ondragleave = handleDragLeave;
+                    card.ondrop = (e) => handleDrop(e, i, type);
+                    card.ondragend = handleDragEnd;
+                }
+
+                card.innerHTML = `
+                    ${isDeleteMode ? `
+                    <div class="admin-controls">
+                        <button class="ctrl-btn btn-up" onclick="moveItem('${item.key}', -1, '${type}')"><i class="fas fa-arrow-up"></i></button>
+                        <button class="ctrl-btn btn-down" onclick="moveItem('${item.key}', 1, '${type}')"><i class="fas fa-arrow-down"></i></button>
+                        <button class="ctrl-btn btn-del" onclick="deleteItem('${item.key}', '${type}s')"><i class="fas fa-trash"></i></button>
+                    </div>` : ''}
+                    ${isDragDropMode && isAdmin ? `
+                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(102,252,241,0.2); padding:4px 8px; border-radius:5px; font-size:0.7rem; color:var(--accent-cyan); z-index:50;">
+                        <i class="fas fa-grip-vertical"></i> Drag me
+                    </div>` : ''}
+                    ${item.tag ? `<div class="demon-tag">${escapeHtml(item.tag)}</div>` : ''}
+                    <img src="${item.img || 'https://via.placeholder.com/600x300/1f2833/66fcf1?text=AlexGDPS'}" class="card-img" onerror="this.src='https://via.placeholder.com/600x300/1f2833/66fcf1?text=AlexGDPS'">
+                    <div class="card-body">
+                        <h3 style="margin:0; color:var(--accent-cyan); font-size:1.25rem;">#${i+1} ${escapeHtml(item.name)}</h3>
+                        <p style="color:#aaa; margin:6px 0 15px;">by <span style="color:#fff">${escapeHtml(item.author)}</span></p>
+                        <div class="level-id-box" onclick="copyID('${item.levelID || ''}')">ID: ${item.levelID || 'N/A'}</div>
+                        <button class="btn-more" onclick="showInfoByKey('${item.key}', '${type}')">${currentLang==='EN'?'DETAILS':'ПОДРОБНЕЕ'}</button>
+                    </div>
+                `;
+                container.appendChild(card);
+            });
+        }
+
+        // ================== Drag & Drop ==================
+        let draggedIndex = -1;
+        function handleDragStart(e, index, type) {
+            if (!isDragDropMode || !isAdmin) return;
+            draggedIndex = index;
+            e.dataTransfer.setData('text/plain', index);
+            e.currentTarget.classList.add('dragging');
+        }
+        function handleDragOver(e, index, type) {
+            if (!isDragDropMode || draggedIndex === -1) return;
+            e.preventDefault();
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+            e.currentTarget.classList.add('drag-over');
+        }
+        function handleDragLeave(e) {
+            e.currentTarget.classList.remove('drag-over');
+        }
+        function handleDrop(e, targetIndex, type) {
+            e.preventDefault();
+            e.currentTarget.classList.remove('drag-over');
+            if (!isDragDropMode || draggedIndex === -1 || draggedIndex === targetIndex) return;
+
+            let items = type === 'demon' ? demons : challenges;
+            const newItems = [...items];
+            const dragged = newItems[draggedIndex];
+            newItems.splice(draggedIndex, 1);
+            newItems.splice(targetIndex, 0, dragged);
+
+            const updates = {};
+            newItems.forEach((item, idx) => {
+                if (item.order !== idx) {
+                    updates[`/${type}s/${item.key}/order`] = idx;
+                }
+            });
+            db.ref().update(updates).then(() => showToast('Порядок обновлён!'));
+            draggedIndex = -1;
+        }
+        function handleDragEnd(e) {
+            e.currentTarget.classList.remove('dragging');
+            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
+            draggedIndex = -1;
+        }
+
+        // ================== Управление элементами ==================
+        function moveItem(key, dir, type) {
+            const items = type === 'demon' ? demons : challenges;
+            const index = items.findIndex(i => i.key === key);
+            if (index === -1) return;
+            const target = index + dir;
+            if (target < 0 || target >= items.length) return;
+            const updates = {};
+            updates[`/${type}s/${items[index].key}/order`] = target;
+            updates[`/${type}s/${items[target].key}/order`] = index;
+            db.ref().update(updates);
+        }
+
+        function deleteItem(key, path) {
+            if (confirm('Удалить элемент?')) db.ref(path + '/' + key).remove();
+        }
+
+        // ================== Просмотр деталей ==================
+        function showInfoByKey(key, type) {
+            const item = type === 'demon' ? demons.find(x => x.key === key) : challenges.find(x => x.key === key);
+            if (!item) return;
+
+            const vics = item.victors ? Object.entries(item.victors).map(([vk, v]) => `
+                <div class="record-item">
+                    <span><b style="color:#fff;">${escapeHtml(v.name)}</b> — <span style="color:var(--accent-cyan); font-weight:700;">${v.perc || '100%'}</span> <span style="color:#aaa;">(${v.att || '0'} att)</span></span>
+                    ${isDeleteMode ? `<i class="fas fa-times" style="color:#ff4d4d; cursor:pointer;" onclick="deleteVictor('${item.key}', '${vk}', '${type}')"></i>` : ''}
+                </div>`).join('') : `<p style='color:#888;'>${currentLang==='EN'?'No records yet':'Рекордов пока нет'}</p>`;
+
+            document.getElementById('modalData').innerHTML = `
+                <button class="modal-close-pin" onclick="document.getElementById('detailModal').style.display='none'">
+                    <i class="fas fa-times"></i>
+                </button>
+                <h2 style="font-family:Montserrat; font-size:clamp(1.3rem,5vw,2rem); margin:0 44px 4px 0; color: #fff;">${escapeHtml(item.name)}</h2>
+                <p style="color:#aaa; font-size:0.9rem; margin:0 0 14px;">by <span style="color:var(--accent-cyan);">${escapeHtml(item.author)}</span> ${item.verifier ? '| Verified by ' + escapeHtml(item.verifier) : ''}</p>
+                <iframe style="width:100%; aspect-ratio:16/9; border-radius:14px; margin:0 0 18px; border:1px solid rgba(102, 252, 241, 0.2);" src="https://www.youtube.com/embed/${item.vid || ''}" frameborder="0" allowfullscreen></iframe>
+                <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">Victors & Records:</h3>
+                <div style="max-height:220px; overflow-y:auto; padding-right:6px;">${vics}</div>
+                <button class="btn-more" style="background:transparent; border:1px solid #555; color:#888; margin-top:20px;" onclick="document.getElementById('detailModal').style.display='none'">${currentLang==='EN'?'CLOSE':'ЗАКРЫТЬ'}</button>`;
+            
+            document.getElementById('detailModal').style.display = 'block';
+            document.getElementById('detailModal').scrollTop = 0;
+        }
+
+        function deleteVictor(itemKey, victorKey, type) {
+            if (confirm('Удалить рекорд?')) {
+                db.ref(`${type}s/${itemKey}/victors/${victorKey}`).remove().then(() => {
+                    document.getElementById('detailModal').style.display = 'none';
+                });
+            }
+        }
+
+        // ================== Админка ==================
         function adminLogin() {
             const email = document.getElementById('adminEmail').value.trim();
             const pass = document.getElementById('adminPass').value;
@@ -799,256 +1061,18 @@
             toggleAdmFields();
         }
 
-        function toggleBurger() {
-            const menu = document.getElementById('mobileMenu');
-            const btn  = document.getElementById('burgerBtn');
-            const open = menu.classList.contains('open');
-            menu.classList.toggle('open', !open);
-            btn.classList.toggle('open', !open);
-        }
-        function closeBurger() {
-            document.getElementById('mobileMenu').classList.remove('open');
-            document.getElementById('burgerBtn').classList.remove('open');
+        function closeAdmin() {
+            document.getElementById('adminPanel').style.display = 'none';
+            document.getElementById('fields_main').style.display = 'block';
+            document.getElementById('moderationContainer').style.display = 'none';
         }
 
-        function openSection(id) {
-            document.querySelectorAll('.section-page').forEach(sec => sec.classList.remove('active'));
-            document.getElementById(id).classList.add('active');
-            window.scrollTo(0,0);
-            const drops = document.getElementsByClassName("dropdown-content");
-            for (let i = 0; i < drops.length; i++) { drops[i].classList.remove('show'); }
-            closeBurger();
-            if (id === 'recordsSection') {
-                loadRecords();
-            }
+        function extractVideoId(url) {
+            if (!url) return '';
+            const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
+            return match ? match[1] : url;
         }
 
-        function toggleDropdown(id, event) {
-            event.stopPropagation();
-            document.getElementById(id).classList.toggle("show");
-        }
-
-        window.onclick = function(event) {
-            if (!event.target.matches('.nav-item') && !event.target.matches('.fa-caret-down')) {
-                var dropdowns = document.getElementsByClassName("dropdown-content");
-                for (var i = 0; i < dropdowns.length; i++) {
-                    if (dropdowns[i].classList.contains('show')) { dropdowns[i].classList.remove('show'); }
-                }
-            }
-        }
-
-        db.ref('demons').on('value', s => {
-            const val = s.val();
-            demons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=>(a.order||0)-(b.order||0)) : [];
-            render();
-        });
-        
-        db.ref('creators').on('value', s => {
-            const val = s.val();
-            creators = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=>parseInt(b.points)-parseInt(a.points)) : [];
-            render();
-        });
-
-        db.ref('challenges').on('value', s => {
-            const val = s.val();
-            challenges = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=>(a.order||0)-(b.order||0)) : [];
-            render();
-        });
-
-        function setSearchMode(m) {
-            searchMode = m;
-            document.getElementById('searchModeMain').classList.toggle('active', m === 'main');
-            document.getElementById('searchModeTag').classList.toggle('active', m === 'tag');
-            render();
-        }
-
-        function showToast(message) {
-            const toast = document.getElementById('copyToast');
-            toast.innerText = message;
-            toast.className = 'show';
-            setTimeout(() => toast.className = '', 2000);
-        }
-
-        function toggleDragDropMode() {
-            isDragDropMode = !isDragDropMode;
-            const indicator = document.getElementById('dragIndicator');
-            indicator.style.display = isDragDropMode ? 'flex' : 'none';
-            render();
-            showToast(isDragDropMode ? 'Drag & Drop режим включён' : 'Drag & Drop режим выключён');
-        }
-
-        function render() {
-            const container = document.getElementById('mainContainer');
-            const query = document.getElementById('searchInput').value.toLowerCase();
-            const topBanner = document.getElementById('top50Banner');
-
-            container.innerHTML = '';
-
-            if (currentTab === 'demons') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'DEMON LIST' : 'СПИСОК ДЕМОНОВ';
-                topBanner.style.display = 'block';
-                const filtered = demons.filter(d => {
-                    if (searchMode === 'tag') return d.tag && d.tag.toLowerCase().includes(query);
-                    return d.name.toLowerCase().includes(query) || d.author.toLowerCase().includes(query);
-                });
-                renderCards(filtered, 'demon');
-            } else if (currentTab === 'challenges') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CHALLENGE LIST' : 'СПИСОК ЧЕЛЛЕНДЖЕЙ';
-                topBanner.style.display = 'block';
-                const filtered = challenges.filter(c => {
-                    if (searchMode === 'tag') return c.tag && c.tag.toLowerCase().includes(query);
-                    return c.name.toLowerCase().includes(query) || c.author.toLowerCase().includes(query);
-                });
-                renderCards(filtered, 'challenge');
-            } else if (currentTab === 'creators') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CREATOR TOP' : 'ТОП КРЕАТОРОВ';
-                topBanner.style.display = 'none';
-                const filtered = creators.filter(c => c.name.toLowerCase().includes(query));
-                filtered.forEach((c, i) => {
-                    container.innerHTML += `<div class="card">
-                        ${isDeleteMode ? `<div class="admin-controls"><button class="ctrl-btn btn-del" onclick="deleteItem('${c.key}','creators')"><i class="fas fa-trash"></i></button></div>` : ''}
-                        <div class="card-body" style="display:flex; justify-content:space-between; align-items:center; padding:35px 40px;">
-                            <h3 style="margin:0; font-size:1.2rem; color:#fff;">#${i+1} ${c.name}</h3>
-                            <div><span style="font-size:1.5rem; color:var(--accent-cyan); font-weight:900;">${c.points} CP</span></div>
-                        </div>
-                    </div>`;
-                });
-            }
-        }
-
-        function renderCards(items, type) {
-            const container = document.getElementById('mainContainer');
-            items.forEach((item, i) => {
-                const card = document.createElement('div');
-                card.className = 'card';
-
-                if (isDragDropMode && isAdmin) {
-                    card.setAttribute('draggable', 'true');
-                    card.setAttribute('data-index', i);
-                    card.ondragstart = (e) => handleDragStart(i, e);
-                    card.ondragover = (e) => handleDragOver(i, e);
-                    card.ondragleave = handleDragLeave;
-                    card.ondrop = (e) => handleDrop(i, e, type);
-                    card.ondragend = handleDragEnd;
-                }
-
-                card.innerHTML = `
-                    ${isDeleteMode ? `
-                    <div class="admin-controls">
-                        <button class="ctrl-btn btn-up" onclick="moveItem('${item.key}', -1, '${type}')"><i class="fas fa-arrow-up"></i></button>
-                        <button class="ctrl-btn btn-down" onclick="moveItem('${item.key}', 1, '${type}')"><i class="fas fa-arrow-down"></i></button>
-                        <button class="ctrl-btn btn-del" onclick="deleteItem('${item.key}', '${type}s')"><i class="fas fa-trash"></i></button>
-                    </div>` : ''}
-                    ${isDragDropMode && isAdmin ? `
-                    <div style="position: absolute; top: 10px; left: 10px; background: rgba(102,252,241,0.2); padding:4px 8px; border-radius:5px; font-size:0.7rem; color:var(--accent-cyan); z-index:50;">
-                        <i class="fas fa-grip-vertical"></i> Drag me
-                    </div>` : ''}
-                    ${item.tag ? `<div class="demon-tag">${item.tag}</div>` : ''}
-                    <img src="${item.img}" class="card-img" onerror="this.src='https://via.placeholder.com/600x300/1f2833/66fcf1?text=AlexGDPS'">
-                    <div class="card-body">
-                        <h3 style="margin:0; color:var(--accent-cyan); font-size:1.25rem;">#${i+1} ${item.name}</h3>
-                        <p style="color:#aaa; margin:6px 0 15px;">by <span style="color:#fff">${item.author}</span></p>
-                        <div class="level-id-box" onclick="copyID('${item.levelID}')">ID: ${item.levelID}</div>
-                        <button class="btn-more" onclick="showInfoByKey('${item.key}', '${type}')">${currentLang==='EN'?'DETAILS':'ПОДРОБНЕЕ'}</button>
-                    </div>
-                `;
-                container.appendChild(card);
-            });
-        }
-
-        // Drag & Drop handlers
-        let draggedIndex = -1;
-        function handleDragStart(index, event) {
-            if (!isDragDropMode || !isAdmin) return;
-            draggedIndex = index;
-            event.dataTransfer.setData('text/plain', index);
-            event.currentTarget.classList.add('dragging');
-        }
-        function handleDragOver(index, event) {
-            if (!isDragDropMode || draggedIndex === -1) return;
-            event.preventDefault();
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
-            event.currentTarget.classList.add('drag-over');
-        }
-        function handleDragLeave(event) {
-            event.currentTarget.classList.remove('drag-over');
-        }
-        function handleDrop(targetIndex, event, type) {
-            event.preventDefault();
-            event.currentTarget.classList.remove('drag-over');
-            if (!isDragDropMode || draggedIndex === -1 || draggedIndex === targetIndex) return;
-
-            let items = type === 'demon' ? demons : challenges;
-            const newItems = [...items];
-            const dragged = newItems[draggedIndex];
-            newItems.splice(draggedIndex, 1);
-            newItems.splice(targetIndex, 0, dragged);
-
-            const updates = {};
-            newItems.forEach((item, idx) => {
-                if (item.order !== idx) {
-                    updates[`/${type}s/${item.key}/order`] = idx;
-                }
-            });
-            db.ref().update(updates).then(() => showToast('Порядок обновлён!'));
-            draggedIndex = -1;
-        }
-        function handleDragEnd(event) {
-            event.currentTarget.classList.remove('dragging');
-            document.querySelectorAll('.card').forEach(c => c.classList.remove('drag-over'));
-            draggedIndex = -1;
-        }
-
-        function moveItem(key, dir, type) {
-            const items = type === 'demon' ? demons : challenges;
-            const index = items.findIndex(i => i.key === key);
-            if (index === -1) return;
-            const target = index + dir;
-            if (target < 0 || target >= items.length) return;
-            const updates = {};
-            updates[`/${type}s/${items[index].key}/order`] = target;
-            updates[`/${type}s/${items[target].key}/order`] = index;
-            db.ref().update(updates);
-        }
-
-        function deleteItem(key, path) {
-            if (confirm('Удалить элемент?')) db.ref(path + '/' + key).remove();
-        }
-
-        function showInfoByKey(key, type) {
-            const item = type === 'demon' ? demons.find(x => x.key === key) : challenges.find(x => x.key === key);
-            if (!item) return;
-
-            const vics = item.victors ? Object.entries(item.victors).map(([vk, v]) => `
-                <div class="record-item">
-                    <span><b style="color:#fff;">${v.name}</b> — <span style="color:var(--accent-cyan); font-weight:700;">${v.perc || '100%'}</span> <span style="color:#aaa;">(${v.att || '0'} att)</span></span>
-                    ${isDeleteMode ? `<i class="fas fa-times" style="color:#ff4d4d; cursor:pointer; flex-shrink:0;" onclick="deleteVictor('${item.key}', '${vk}', '${type}')"></i>` : ''}
-                </div>`).join('') : `<p style='color:#888;'>${currentLang==='EN'?'No records yet':'Рекордов пока нет'}</p>`;
-
-            document.getElementById('modalData').innerHTML = `
-                <button class="modal-close-pin" onclick="document.getElementById('detailModal').style.display='none'">
-                    <i class="fas fa-times"></i>
-                </button>
-                <h2 style="font-family:Montserrat; font-size:clamp(1.3rem,5vw,2rem); margin:0 44px 4px 0; color: #fff;">${item.name}</h2>
-                <p style="color:#aaa; font-size:0.9rem; margin:0 0 14px;">by <span style="color:var(--accent-cyan);">${item.author}</span> ${item.verifier ? '| Verified by ' + item.verifier : ''}</p>
-                <iframe style="width:100%; aspect-ratio:16/9; border-radius:14px; margin:0 0 18px; border:1px solid rgba(102, 252, 241, 0.2);" src="https://www.youtube.com/embed/${item.vid}" frameborder="0" allowfullscreen></iframe>
-                <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">Victors & Records:</h3>
-                <div style="max-height:220px; overflow-y:auto; padding-right:6px;">${vics}</div>
-                <button class="btn-more" style="background:transparent; border:1px solid #555; color:#888; margin-top:20px;" onclick="document.getElementById('detailModal').style.display='none'">${currentLang==='EN'?'CLOSE':'ЗАКРЫТЬ'}</button>`;
-            
-            document.getElementById('detailModal').style.display='block';
-            document.getElementById('detailModal').scrollTop = 0;
-        }
-
-        function deleteVictor(itemKey, victorKey, type) {
-            if (confirm('Удалить рекорд?')) {
-                db.ref(`${type}s/${itemKey}/victors/${victorKey}`).remove().then(() => {
-                    document.getElementById('detailModal').style.display='none';
-                });
-            }
-        }
-
-        // Админские действия
         function processAdmin() {
             if (!isAdmin) { alert('Нет доступа!'); return; }
             const act = document.getElementById('admAction').value;
@@ -1118,13 +1142,23 @@
             }
         }
 
-        function extractVideoId(url) {
-            if (!url) return '';
-            const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
-            return match ? match[1] : url;
+        function toggleAdmFields() {
+            const a = document.getElementById('admAction').value;
+            document.getElementById('moderationContainer').style.display = 'none';
+            document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') ? 'block' : 'none';
+            document.getElementById('fields_victor').style.display = (a === 'add_victor' || a === 'add_challenge_victor') ? 'block' : 'none';
+
+            if (a === 'add_victor') {
+                const sel = document.getElementById('selectDemonVictim');
+                sel.innerHTML = demons.map(d => `<option value="${d.key}">${escapeHtml(d.name)}</option>`).join('');
+            }
+            if (a === 'add_challenge_victor') {
+                const sel = document.getElementById('selectChallengeVictim');
+                sel.innerHTML = challenges.map(c => `<option value="${c.key}">${escapeHtml(c.name)}</option>`).join('');
+            }
         }
 
-        // Модерация рекордов
+        // ================== Модерация рекордов ==================
         function loadPendingRecords() {
             recordsRef.orderByChild('timestamp').once('value', snapshot => {
                 const container = document.getElementById('moderationContainer');
@@ -1139,15 +1173,15 @@
                         item.className = 'moderation-item';
                         item.innerHTML = `
                             <p><strong>Тип:</strong> ${typeDisplay}</p>
-                            <p><strong>Уровень:</strong> ${rec.levelName}</p>
-                            <p><strong>Ник:</strong> ${rec.nickname}</p>
+                            <p><strong>Уровень:</strong> ${escapeHtml(rec.levelName)}</p>
+                            <p><strong>Ник:</strong> ${escapeHtml(rec.nickname)}</p>
                             <p><strong>Проценты:</strong> ${rec.percent}%</p>
                             <p><strong>YouTube:</strong> <a href="${rec.proof}" target="_blank">ссылка</a></p>
                             <p><strong>Raw:</strong> <a href="${rec.raw}" target="_blank">ссылка</a></p>
-                            ${rec.wish ? `<p><strong>Пожелание:</strong> ${rec.wish}</p>` : ''}
+                            ${rec.wish ? `<p><strong>Пожелание:</strong> ${escapeHtml(rec.wish)}</p>` : ''}
                             <p><strong>Дата:</strong> ${new Date(rec.timestamp).toLocaleString()}</p>
                             <div class="moderation-buttons">
-                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname}', ${rec.percent}, '${rec.itemType || 'demon'}')">✅ Принять</button>
+                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.itemType || 'demon'}')">✅ Принять</button>
                                 <button class="btn-reject" onclick="rejectRecord('${child.key}')">❌ Отклонить</button>
                             </div>
                         `;
@@ -1179,15 +1213,14 @@
             });
         }
 
-        // Переключение типа в форме подачи
+        // ================== Подача рекорда ==================
         function switchRecordType() {
             const type = document.querySelector('input[name="recordType"]:checked').value;
             const select = document.getElementById('recordLevel');
             select.innerHTML = '<option value="">Выберите уровень</option>';
-            
             let items = type === 'demon' ? demons : challenges;
             items.forEach(item => {
-                select.innerHTML += `<option value="${item.key}">${item.name} by ${item.author}</option>`;
+                select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
             });
         }
 
@@ -1259,12 +1292,12 @@
                     const card = document.createElement('div');
                     card.className = 'record-card';
                     card.innerHTML = `
-                        <h3>${rec.levelName} <span style="font-size:0.7rem; color:#888;">(${typeDisplay})</span></h3>
-                        <p><i class="fas fa-user"></i> ${rec.nickname || 'Аноним'}</p>
+                        <h3>${escapeHtml(rec.levelName)} <span style="font-size:0.7rem; color:#888;">(${typeDisplay})</span></h3>
+                        <p><i class="fas fa-user"></i> ${escapeHtml(rec.nickname || 'Аноним')}</p>
                         <p class="percentage">${rec.percent}%</p>
                         <p><i class="fab fa-youtube"></i> <a href="${rec.proof}" target="_blank">Прохождение</a></p>
                         <p><i class="fas fa-video"></i> <a href="${rec.raw}" target="_blank">Raw</a></p>
-                        ${rec.wish ? `<p>💬 ${rec.wish}</p>` : ''}
+                        ${rec.wish ? `<p>💬 ${escapeHtml(rec.wish)}</p>` : ''}
                         <p style="color:#888; font-size:0.8rem;">${new Date(rec.timestamp).toLocaleString()}</p>
                         <p>Статус: ${rec.status === 'pending' ? '⏳ На модерации' : (rec.status === 'approved' ? '✅ Принят' : '❌ Отклонён')}</p>
                     `;
@@ -1273,23 +1306,13 @@
             });
         }
 
-        // Обновление полей админки при смене действия
-        function toggleAdmFields() {
-            const a = document.getElementById('admAction').value;
-            document.getElementById('moderationContainer').style.display = 'none';
-            document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') ? 'block' : 'none';
-            document.getElementById('fields_victor').style.display = (a === 'add_victor' || a === 'add_challenge_victor') ? 'block' : 'none';
-
-            if (a === 'add_victor') {
-                const sel = document.getElementById('selectDemonVictim');
-                sel.innerHTML = demons.map(d => `<option value="${d.key}">${d.name}</option>`).join('');
-            }
-            if (a === 'add_challenge_victor') {
-                const sel = document.getElementById('selectChallengeVictim');
-                sel.innerHTML = challenges.map(c => `<option value="${c.key}">${c.name}</option>`).join('');
-            }
+        // ================== Переключение вкладок списков ==================
+        function switchTab(tab) {
+            currentTab = tab;
+            render();
         }
 
+        // ================== Копирование ==================
         function copyGDPS() {
             const text = "alexgdops.ps.fhgdps.com";
             navigator.clipboard.writeText(text).then(() => {
@@ -1301,30 +1324,43 @@
         }
 
         function copyID(id) {
-            navigator.clipboard.writeText(id);
+            navigator.clipboard.writeText(id || '');
             const t = document.getElementById("copyToast");
             t.innerText = currentLang === 'RU' ? 'ID Скопировано!' : 'ID Copied!';
             t.className = "show";
             setTimeout(() => t.className = "", 3000);
         }
 
+        // ================== Перевод ==================
         function toggleLang() {
             currentLang = currentLang === 'RU' ? 'EN' : 'RU';
             document.getElementById('langBtn').innerText = currentLang;
             const translations = {
                 RU: {
-                    welcomeT: "ALEX GDPS", play: "СКАЧАТЬ ИГРУ", list: "DEMON LIST",
-                    searchP: "Поиск...", verify: "Критерии верификации", toast: "ID Скопировано!",
-                    navDownloadText: "Скачать", navHome: "Главная",
-                    dlTitle: "СКАЧАТЬ ИГРУ", dlVersion: "Версия 2.2081",
+                    welcomeT: "ALEX GDPS",
+                    play: "СКАЧАТЬ ИГРУ",
+                    list: "DEMON LIST",
+                    searchP: "Поиск...",
+                    verify: "Критерии верификации",
+                    toast: "ID Скопировано!",
+                    navDownloadText: "Скачать",
+                    navHome: "Главная",
+                    dlTitle: "СКАЧАТЬ ИГРУ",
+                    dlVersion: "Версия 2.2081",
                     dlDescPC: "Скачать .zip архив для игры на компьютере",
                     dlDescAnd: "Скачать .apk файл для игры на телефоне"
                 },
                 EN: {
-                    welcomeT: "ALEX GDPS", play: "DOWNLOAD GAME", list: "DEMON LIST",
-                    searchP: "Search...", verify: "Verification Criteria", toast: "ID Copied!",
-                    navDownloadText: "Download", navHome: "Home",
-                    dlTitle: "DOWNLOAD GAME", dlVersion: "Version 2.2081",
+                    welcomeT: "ALEX GDPS",
+                    play: "DOWNLOAD GAME",
+                    list: "DEMON LIST",
+                    searchP: "Search...",
+                    verify: "Verification Criteria",
+                    toast: "ID Copied!",
+                    navDownloadText: "Download",
+                    navHome: "Home",
+                    dlTitle: "DOWNLOAD GAME",
+                    dlVersion: "Version 2.2081",
                     dlDescPC: "Download .zip archive to play on PC",
                     dlDescAnd: "Download .apk file to play on mobile"
                 }
@@ -1345,26 +1381,7 @@
             render();
         }
 
-        function switchTab(tab) {
-            currentTab = tab;
-            render();
-        }
-
-        function closeAdmin() {
-            document.getElementById('adminPanel').style.display = 'none';
-            document.getElementById('fields_main').style.display = 'block';
-            document.getElementById('moderationContainer').style.display = 'none';
-        }
-    </script>
-
-    <div id="maintenanceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; background:#0b0c10; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;">
-        <div style="font-size:4rem; margin-bottom:20px;">🔧</div>
-        <h1 style="font-family:'Montserrat',sans-serif; font-size:clamp(2rem,6vw,4rem); margin:0 0 16px; background:linear-gradient(135deg,#66fcf1,#45a29e); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">ТЕХНИЧЕСКИЙ ПЕРЕРЫВ</h1>
-        <p style="color:#c5c6c7; font-size:1.1rem; max-width:500px; line-height:1.7; margin:0 0 30px;">Сайт временно недоступен. Мы проводим технические работы. Скоро вернёмся!</p>
-        <div style="background:rgba(102,252,241,0.08); border:1px solid rgba(102,252,241,0.2); border-radius:12px; padding:12px 24px; color:#66fcf1; font-weight:700; font-size:0.9rem; letter-spacing:1px;">ALEX GDPS</div>
-    </div>
-
-    <script>
+        // ================== Техперерыв ==================
         db.ref('maintenance').on('value', s => {
             const on = s.val() === true;
             const overlay = document.getElementById('maintenanceOverlay');
@@ -1377,5 +1394,12 @@
             }
         });
     </script>
+
+    <div id="maintenanceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; background:#0b0c10; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;">
+        <div style="font-size:4rem; margin-bottom:20px;">🔧</div>
+        <h1 style="font-family:'Montserrat',sans-serif; font-size:clamp(2rem,6vw,4rem); margin:0 0 16px; background:linear-gradient(135deg,#66fcf1,#45a29e); -webkit-background-clip:text; -webkit-text-fill-color:transparent;">ТЕХНИЧЕСКИЙ ПЕРЕРЫВ</h1>
+        <p style="color:#c5c6c7; font-size:1.1rem; max-width:500px; line-height:1.7; margin:0 0 30px;">Сайт временно недоступен. Мы проводим технические работы. Скоро вернёмся!</p>
+        <div style="background:rgba(102,252,241,0.08); border:1px solid rgba(102,252,241,0.2); border-radius:12px; padding:12px 24px; color:#66fcf1; font-weight:700; font-size:0.9rem; letter-spacing:1px;">ALEX GDPS</div>
+    </div>
 </body>
 </html>
