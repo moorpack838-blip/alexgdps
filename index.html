@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили остаются без изменений */
+        /* Все стили остаются без изменений (можно оставить как есть) */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -431,6 +431,48 @@
             color: #fff;
         }
 
+        /* Стили для детальной информации в модалке */
+        .detail-stats {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin: 20px 0;
+        }
+        .stat-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 10px;
+            padding: 10px;
+            border: 1px solid rgba(102,252,241,0.1);
+        }
+        .stat-label {
+            color: #888;
+            font-size: 0.8rem;
+            text-transform: uppercase;
+        }
+        .stat-value {
+            color: #fff;
+            font-size: 1.2rem;
+            font-weight: 700;
+        }
+        .copy-password {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        .copy-password button {
+            background: rgba(102,252,241,0.1);
+            border: 1px solid var(--accent-cyan);
+            color: var(--accent-cyan);
+            padding: 5px 15px;
+            border-radius: 20px;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .copy-password button:hover {
+            background: var(--accent-cyan);
+            color: #0b0c10;
+        }
+
         @media (max-width: 768px) {
             .navbar { padding: 0 14px; height: 60px; flex-wrap: nowrap; }
             .logo { font-size: 1.2rem; }
@@ -470,6 +512,7 @@
             .admin-form input, .admin-form select { padding: 12px; }
 
             .records-grid { grid-template-columns: 1fr; }
+            .detail-stats { grid-template-columns: 1fr; }
         }
 
         @media (max-width: 400px) {
@@ -560,9 +603,9 @@
                 <span class="home-video-tag"><i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>СМОТРЕТЬ НА YOUTUBE</span>
                 <span class="home-video-line"></span>
             </div>
-            <h2 class="home-video-title">Alex GDPS STORY</h2>
+            <h2 class="home-video-title">Alex GDPS 2025 AWARDS</h2>
             <div class="home-video-wrapper">
-                <iframe src="https://www.youtube.com/embed/2gnaErBIprU" title="Alex GDPS Story" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
+                <iframe src="https://www.youtube.com/embed/E6MWW70jUso" title="Alex GDPS 2025 AWARDS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
         </section>
     </main>
@@ -665,14 +708,20 @@
                 <option value="moderate_records">🛡️ Модерация рекордов</option>
             </select>
             <div id="fields_main">
-                <input type="text" id="itemName" placeholder="Название / Ник">
-                <input type="text" id="itemVal" placeholder="Автор / CP">
+                <input type="text" id="itemName" placeholder="Название">
+                <input type="text" id="itemVal" placeholder="Автор">
                 <div id="fields_demon_challenge" style="display:block;">
-                    <input type="text" id="itemID" placeholder="ID Уровня (для демона/челленджа)">
+                    <input type="text" id="itemID" placeholder="ID Уровня">
                     <input type="text" id="itemTag" placeholder="Тег (напр. Top 1)">
                     <input type="text" id="itemVerifier" placeholder="Верифер">
                     <input type="text" id="itemImgURL" placeholder="Ссылка на картинку">
                     <input type="text" id="itemVid" placeholder="Ссылка на YouTube">
+                    <!-- Новые поля для детальной информации -->
+                    <input type="text" id="itemPassword" placeholder="Пароль (необязательно)">
+                    <input type="text" id="itemLength" placeholder="Длина (напр. 0:50)">
+                    <input type="text" id="itemObjects" placeholder="Объекты (напр. 20 251)">
+                    <input type="text" id="itemVersion" placeholder="Версия (напр. 1.9)">
+                    <input type="text" id="itemScore" placeholder="Счёт (напр. 0.60)">
                 </div>
             </div>
             <div id="fields_victor" style="display:none;">
@@ -697,15 +746,15 @@
         <button onclick="closeRecordModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:8px;background:rgba(255,70,70,0.13);border:1px solid rgba(255,70,70,0.3);color:#ff6868;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
             <i class="fas fa-times"></i>
         </button>
-        <h2>ПОДАТЬ РЕКОРД</h2>
+        <h2 id="recordModalTitle">ПОДАТЬ РЕКОРД</h2>
 
         <!-- Выбор типа -->
         <div style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
             <label style="color: var(--accent-cyan);">
-                <input type="radio" name="recordType" value="demon" checked onchange="switchRecordType()"> Демон
+                <input type="radio" name="recordType" value="demon" checked onchange="switchRecordType()"> <span id="radioDemon">Демон</span>
             </label>
             <label style="color: var(--accent-cyan);">
-                <input type="radio" name="recordType" value="challenge" onchange="switchRecordType()"> Челлендж
+                <input type="radio" name="recordType" value="challenge" onchange="switchRecordType()"> <span id="radioChallenge">Челлендж</span>
             </label>
         </div>
 
@@ -718,11 +767,11 @@
         <textarea id="recordWish" placeholder="Пожелание (необязательно)"></textarea>
         <input type="number" id="recordPercent" placeholder="Рекорд (проценты, до 100)" min="1" max="100" required>
         <div id="recordError" class="error-message">Проценты должны быть от 1 до 100</div>
-        <button class="btn-more" style="background:var(--main-grad);color:#0b0c10;margin-top:15px;" onclick="submitRecord()">ОТПРАВИТЬ</button>
+        <button class="btn-more" style="background:var(--main-grad);color:#0b0c10;margin-top:15px;" onclick="submitRecord()" id="submitRecordBtn">ОТПРАВИТЬ</button>
     </div>
 
     <script>
-        // Firebase config
+        // ================== Firebase config ==================
         const firebaseConfig = {
             apiKey: "AIzaSyAt_V1zhTFDM308B-XSvVIN9N2JzROBQwc",
             authDomain: "alexgdps2.firebaseapp.com",
@@ -737,9 +786,8 @@
         firebase.initializeApp(firebaseConfig);
         const db = firebase.database();
         const auth = firebase.auth();
-        const functions = firebase.functions();
 
-        // Глобальные переменные
+        // ================== Глобальные переменные ==================
         let currentLang = 'RU';
         let isAdmin = false;
         let isDeleteMode = false;
@@ -752,12 +800,217 @@
 
         const recordsRef = db.ref('recordRequests');
 
-        // Инициализация состояния админа из localStorage
+        // ================== Переводы ==================
+        const translations = {
+            RU: {
+                navHome: "Главная",
+                navListsText: "Списки",
+                navRecords: "Рекорды",
+                navDownloadText: "Скачать",
+                welcomeTitle: "ALEX GDPS",
+                welcomeDesc: "Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.",
+                btnPlay: "СКАЧАТЬ ИГРУ",
+                btnList: "DEMON LIST",
+                videoTag: "СМОТРЕТЬ НА YOUTUBE",
+                videoTitle: "Alex GDPS 2025 AWARDS",
+                dlTitle: "СКАЧАТЬ ИГРУ",
+                dlVersion: "Версия 2.2081",
+                dlDescPC: "Скачать .zip архив для игры на компьютере",
+                dlDescAnd: "Скачать .apk файл для игры на телефоне",
+                gdpsCopied: "Адрес скопирован!",
+                copyToast: "ID Скопировано!",
+                verifyLink: "Критерии верификации",
+                searchModeMain: "Название / Автор",
+                searchModeTag: "По тегу",
+                searchPlaceholder: "Поиск...",
+                demonList: "СПИСОК ДЕМОНОВ",
+                challengeList: "СПИСОК ЧЕЛЛЕНДЖЕЙ",
+                creatorTop: "ТОП КРЕАТОРОВ",
+                top50: "TOP 50",
+                recordsTitle: "РЕКОРДЫ ИГРОКОВ",
+                submitRecord: "ПОДАТЬ РЕКОРД",
+                recordModalTitle: "ПОДАТЬ РЕКОРД",
+                radioDemon: "Демон",
+                radioChallenge: "Челлендж",
+                recordProof: "Ссылка на прохождение (YouTube)",
+                recordRaw: "Raw footage (ссылка на Google Drive)",
+                recordNickname: "Твой ник (игровое имя)",
+                recordLevel: "Выберите уровень",
+                recordWish: "Пожелание (необязательно)",
+                recordPercent: "Рекорд (проценты, до 100)",
+                submitRecordBtn: "ОТПРАВИТЬ",
+                details: "ПОДРОБНЕЕ",
+                close: "ЗАКРЫТЬ",
+                copy: "Копировать",
+                id: "ID",
+                password: "Пароль",
+                length: "Длина",
+                objects: "Объекты",
+                version: "Версия",
+                score: "Счёт",
+                verified: "Верифицирован",
+                victors: "Victors & Records:",
+                noRecords: "Рекордов пока нет",
+                statusPending: "⏳ На модерации",
+                statusApproved: "✅ Принят",
+                statusRejected: "❌ Отклонён",
+                adminPanel: "ADMIN PANEL",
+                adminEmail: "Email",
+                adminPass: "Пароль",
+                adminLogin: "ВОЙТИ",
+                adminLogout: "ВЫЙТИ ИЗ АККАУНТА",
+                addDemon: "Добавить Демона",
+                addChallenge: "Добавить Челлендж",
+                addCreator: "Добавить Креатора",
+                addVictor: "Добавить Рекорд Демона",
+                addChallengeVictor: "Добавить Рекорд Челленджа",
+                deleteMode: "Удаление / Движение (Демоны/Челленджи)",
+                deleteAll: "🗑️ Удалить ВСЕХ демонов",
+                maintenance: "🔧 Техперерыв вкл/выкл",
+                dragDrop: "🖱️ Drag & Drop режим",
+                moderate: "🛡️ Модерация рекордов",
+                namePlaceholder: "Название",
+                authorPlaceholder: "Автор",
+                idPlaceholder: "ID Уровня",
+                tagPlaceholder: "Тег (напр. Top 1)",
+                verifierPlaceholder: "Верифер",
+                imgPlaceholder: "Ссылка на картинку",
+                vidPlaceholder: "Ссылка на YouTube",
+                passwordPlaceholder: "Пароль (необязательно)",
+                lengthPlaceholder: "Длина (напр. 0:50)",
+                objectsPlaceholder: "Объекты (напр. 20 251)",
+                versionPlaceholder: "Версия (напр. 1.9)",
+                scorePlaceholder: "Счёт (напр. 0.60)",
+                execute: "ВЫПОЛНИТЬ",
+                noPending: "Нет ожидающих рекордов"
+            },
+            EN: {
+                navHome: "Home",
+                navListsText: "Lists",
+                navRecords: "Records",
+                navDownloadText: "Download",
+                welcomeTitle: "ALEX GDPS",
+                welcomeDesc: "Dive into the world of the most ambitious Geometry Dash private server. Stability, unique levels, and the strongest community.",
+                btnPlay: "DOWNLOAD GAME",
+                btnList: "DEMON LIST",
+                videoTag: "WATCH ON YOUTUBE",
+                videoTitle: "Alex GDPS 2025 AWARDS",
+                dlTitle: "DOWNLOAD GAME",
+                dlVersion: "Version 2.2081",
+                dlDescPC: "Download .zip archive to play on PC",
+                dlDescAnd: "Download .apk file to play on mobile",
+                gdpsCopied: "Address copied!",
+                copyToast: "ID Copied!",
+                verifyLink: "Verification Criteria",
+                searchModeMain: "Name / Author",
+                searchModeTag: "By Tag",
+                searchPlaceholder: "Search...",
+                demonList: "DEMON LIST",
+                challengeList: "CHALLENGE LIST",
+                creatorTop: "CREATOR TOP",
+                top50: "TOP 50",
+                recordsTitle: "PLAYER RECORDS",
+                submitRecord: "SUBMIT RECORD",
+                recordModalTitle: "SUBMIT RECORD",
+                radioDemon: "Demon",
+                radioChallenge: "Challenge",
+                recordProof: "YouTube Proof Link",
+                recordRaw: "Raw footage (Google Drive link)",
+                recordNickname: "Your nickname",
+                recordLevel: "Select level",
+                recordWish: "Wish (optional)",
+                recordPercent: "Record (percentage, up to 100)",
+                submitRecordBtn: "SEND",
+                details: "DETAILS",
+                close: "CLOSE",
+                copy: "Copy",
+                id: "ID",
+                password: "Password",
+                length: "Length",
+                objects: "Objects",
+                version: "Version",
+                score: "Score",
+                verified: "Verified by",
+                victors: "Victors & Records:",
+                noRecords: "No records yet",
+                statusPending: "⏳ Pending",
+                statusApproved: "✅ Approved",
+                statusRejected: "❌ Rejected",
+                adminPanel: "ADMIN PANEL",
+                adminEmail: "Email",
+                adminPass: "Password",
+                adminLogin: "LOGIN",
+                adminLogout: "LOGOUT",
+                addDemon: "Add Demon",
+                addChallenge: "Add Challenge",
+                addCreator: "Add Creator",
+                addVictor: "Add Demon Record",
+                addChallengeVictor: "Add Challenge Record",
+                deleteMode: "Delete / Move (Demons/Challenges)",
+                deleteAll: "🗑️ Delete ALL demons",
+                maintenance: "🔧 Toggle maintenance",
+                dragDrop: "🖱️ Drag & Drop mode",
+                moderate: "🛡️ Moderate records",
+                namePlaceholder: "Name",
+                authorPlaceholder: "Author",
+                idPlaceholder: "Level ID",
+                tagPlaceholder: "Tag (e.g. Top 1)",
+                verifierPlaceholder: "Verifier",
+                imgPlaceholder: "Image URL",
+                vidPlaceholder: "YouTube URL",
+                passwordPlaceholder: "Password (optional)",
+                lengthPlaceholder: "Length (e.g. 0:50)",
+                objectsPlaceholder: "Objects (e.g. 20 251)",
+                versionPlaceholder: "Version (e.g. 1.9)",
+                scorePlaceholder: "Score (e.g. 0.60)",
+                execute: "EXECUTE",
+                noPending: "No pending records"
+            }
+        };
+
+        // ================== Функция применения перевода ==================
+        function applyTranslations() {
+            const t = translations[currentLang];
+            document.getElementById('navHome').innerText = t.navHome;
+            document.getElementById('navListsText').innerHTML = `${t.navListsText} <i class="fas fa-caret-down"></i>`;
+            document.getElementById('navRecords').innerText = t.navRecords;
+            document.getElementById('navDownloadText').innerText = t.navDownloadText;
+            document.getElementById('welcomeTitle').innerText = t.welcomeTitle;
+            document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
+            document.getElementById('btnPlay').innerText = t.btnPlay;
+            document.getElementById('btnList').innerText = t.btnList;
+            document.querySelector('.home-video-tag').innerHTML = `<i class="fab fa-youtube" style="color:#ff0000; margin-right:8px;"></i>${t.videoTag}`;
+            document.querySelector('.home-video-title').innerText = t.videoTitle;
+            document.getElementById('dlTitle').innerText = t.dlTitle;
+            document.getElementById('dlVersion').innerText = t.dlVersion;
+            document.getElementById('dlDescPC').innerText = t.dlDescPC;
+            document.getElementById('dlDescAnd').innerText = t.dlDescAnd;
+            document.getElementById('verifyLink').innerText = t.verifyLink;
+            document.getElementById('copyToast').innerText = t.copyToast;
+            document.getElementById('searchModeMain').innerText = t.searchModeMain;
+            document.getElementById('searchModeTag').innerText = t.searchModeTag;
+            document.getElementById('searchInput').placeholder = t.searchPlaceholder;
+            document.getElementById('recordsTitle').innerText = t.recordsTitle;
+            document.querySelector('.submit-record-btn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.submitRecord}`;
+            document.getElementById('recordModalTitle').innerText = t.recordModalTitle;
+            document.getElementById('radioDemon').innerText = t.radioDemon;
+            document.getElementById('radioChallenge').innerText = t.radioChallenge;
+            document.getElementById('recordProof').placeholder = t.recordProof;
+            document.getElementById('recordRaw').placeholder = t.recordRaw;
+            document.getElementById('recordNickname').placeholder = t.recordNickname;
+            document.getElementById('recordLevel').options[0].text = t.recordLevel;
+            document.getElementById('recordWish').placeholder = t.recordWish;
+            document.getElementById('recordPercent').placeholder = t.recordPercent;
+            document.getElementById('submitRecordBtn').innerText = t.submitRecordBtn;
+            // Заголовки в списках обновятся при рендере
+            render();
+        }
+
+        // ================== Инициализация состояния админа ==================
         if (localStorage.getItem('mxAdmin') === '1') {
             document.getElementById('admin-trigger').style.display = 'block';
         }
 
-        // Слушатель аутентификации
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
             const trigger = document.getElementById('admin-trigger');
@@ -789,7 +1042,6 @@
             document.querySelectorAll('.section-page').forEach(sec => sec.classList.remove('active'));
             document.getElementById(id).classList.add('active');
             window.scrollTo(0, 0);
-            // Закрыть все дропдауны
             document.querySelectorAll('.dropdown-content').forEach(el => el.classList.remove('show'));
             closeBurger();
             if (id === 'recordsSection') {
@@ -808,7 +1060,7 @@
             }
         };
 
-        // Загрузка данных из Firebase
+        // ================== Загрузка данных из Firebase ==================
         db.ref('demons').on('value', s => {
             const val = s.val();
             demons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
@@ -854,28 +1106,29 @@
             const container = document.getElementById('mainContainer');
             const query = document.getElementById('searchInput').value.toLowerCase();
             const topBanner = document.getElementById('top50Banner');
+            const t = translations[currentLang];
             container.innerHTML = '';
 
             if (currentTab === 'demons') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'DEMON LIST' : 'СПИСОК ДЕМОНОВ';
+                document.getElementById('txtHero').innerText = t.demonList;
                 topBanner.style.display = 'block';
                 const filtered = demons.filter(d => {
                     if (searchMode === 'tag') return d.tag && d.tag.toLowerCase().includes(query);
-                    return d.name.toLowerCase().includes(query) || d.author.toLowerCase().includes(query);
+                    return (d.name && d.name.toLowerCase().includes(query)) || (d.author && d.author.toLowerCase().includes(query));
                 });
                 renderCards(filtered, 'demon');
             } else if (currentTab === 'challenges') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CHALLENGE LIST' : 'СПИСОК ЧЕЛЛЕНДЖЕЙ';
+                document.getElementById('txtHero').innerText = t.challengeList;
                 topBanner.style.display = 'block';
                 const filtered = challenges.filter(c => {
                     if (searchMode === 'tag') return c.tag && c.tag.toLowerCase().includes(query);
-                    return c.name.toLowerCase().includes(query) || c.author.toLowerCase().includes(query);
+                    return (c.name && c.name.toLowerCase().includes(query)) || (c.author && c.author.toLowerCase().includes(query));
                 });
                 renderCards(filtered, 'challenge');
             } else if (currentTab === 'creators') {
-                document.getElementById('txtHero').innerText = currentLang === 'EN' ? 'CREATOR TOP' : 'ТОП КРЕАТОРОВ';
+                document.getElementById('txtHero').innerText = t.creatorTop;
                 topBanner.style.display = 'none';
-                const filtered = creators.filter(c => c.name.toLowerCase().includes(query));
+                const filtered = creators.filter(c => c.name && c.name.toLowerCase().includes(query));
                 filtered.forEach((c, i) => {
                     container.innerHTML += `<div class="card">
                         ${isDeleteMode ? `<div class="admin-controls"><button class="ctrl-btn btn-del" onclick="deleteItem('${c.key}', 'creators')"><i class="fas fa-trash"></i></button></div>` : ''}
@@ -901,6 +1154,7 @@
 
         function renderCards(items, type) {
             const container = document.getElementById('mainContainer');
+            const t = translations[currentLang];
             items.forEach((item, i) => {
                 const card = document.createElement('div');
                 card.className = 'card';
@@ -931,8 +1185,8 @@
                     <div class="card-body">
                         <h3 style="margin:0; color:var(--accent-cyan); font-size:1.25rem;">#${i+1} ${escapeHtml(item.name)}</h3>
                         <p style="color:#aaa; margin:6px 0 15px;">by <span style="color:#fff">${escapeHtml(item.author)}</span></p>
-                        <div class="level-id-box" onclick="copyID('${item.levelID || ''}')">ID: ${item.levelID || 'N/A'}</div>
-                        <button class="btn-more" onclick="showInfoByKey('${item.key}', '${type}')">${currentLang==='EN'?'DETAILS':'ПОДРОБНЕЕ'}</button>
+                        <div class="level-id-box" onclick="copyID('${item.levelID || ''}')">${t.id}: ${item.levelID || 'N/A'}</div>
+                        <button class="btn-more" onclick="showInfoByKey('${item.key}', '${type}')">${t.details}</button>
                     </div>
                 `;
                 container.appendChild(card);
@@ -999,30 +1253,70 @@
             if (confirm('Удалить элемент?')) db.ref(path + '/' + key).remove();
         }
 
-        // ================== Просмотр деталей ==================
+        // ================== Просмотр деталей (обновлён) ==================
         function showInfoByKey(key, type) {
             const item = type === 'demon' ? demons.find(x => x.key === key) : challenges.find(x => x.key === key);
             if (!item) return;
 
+            const t = translations[currentLang];
             const vics = item.victors ? Object.entries(item.victors).map(([vk, v]) => `
                 <div class="record-item">
                     <span><b style="color:#fff;">${escapeHtml(v.name)}</b> — <span style="color:var(--accent-cyan); font-weight:700;">${v.perc || '100%'}</span> <span style="color:#aaa;">(${v.att || '0'} att)</span></span>
                     ${isDeleteMode ? `<i class="fas fa-times" style="color:#ff4d4d; cursor:pointer;" onclick="deleteVictor('${item.key}', '${vk}', '${type}')"></i>` : ''}
-                </div>`).join('') : `<p style='color:#888;'>${currentLang==='EN'?'No records yet':'Рекордов пока нет'}</p>`;
+                </div>`).join('') : `<p style='color:#888;'>${t.noRecords}</p>`;
 
-            document.getElementById('modalData').innerHTML = `
+            const modalContent = `
                 <button class="modal-close-pin" onclick="document.getElementById('detailModal').style.display='none'">
                     <i class="fas fa-times"></i>
                 </button>
                 <h2 style="font-family:Montserrat; font-size:clamp(1.3rem,5vw,2rem); margin:0 44px 4px 0; color: #fff;">${escapeHtml(item.name)}</h2>
-                <p style="color:#aaa; font-size:0.9rem; margin:0 0 14px;">by <span style="color:var(--accent-cyan);">${escapeHtml(item.author)}</span> ${item.verifier ? '| Verified by ' + escapeHtml(item.verifier) : ''}</p>
+                <p style="color:#aaa; font-size:0.9rem; margin:0 0 14px;">by <span style="color:var(--accent-cyan);">${escapeHtml(item.author)}</span> ${item.verifier ? `| ${t.verified} ${escapeHtml(item.verifier)}` : ''}</p>
                 <iframe style="width:100%; aspect-ratio:16/9; border-radius:14px; margin:0 0 18px; border:1px solid rgba(102, 252, 241, 0.2);" src="https://www.youtube.com/embed/${item.vid || ''}" frameborder="0" allowfullscreen></iframe>
-                <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">Victors & Records:</h3>
+                
+                <div class="detail-stats">
+                    <div class="stat-item">
+                        <div class="stat-label">${t.id}</div>
+                        <div class="stat-value">${item.levelID || 'N/A'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">${t.password}</div>
+                        <div class="stat-value copy-password">
+                            ${item.password || '—'}
+                            ${item.password ? `<button onclick="copyText('${item.password}')">${t.copy}</button>` : ''}
+                        </div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">${t.length}</div>
+                        <div class="stat-value">${item.length || '—'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">${t.objects}</div>
+                        <div class="stat-value">${item.objects || '—'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">${t.version}</div>
+                        <div class="stat-value">${item.version || '—'}</div>
+                    </div>
+                    <div class="stat-item">
+                        <div class="stat-label">${t.score}</div>
+                        <div class="stat-value">${item.score || '—'}</div>
+                    </div>
+                </div>
+
+                <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">${t.victors}</h3>
                 <div style="max-height:220px; overflow-y:auto; padding-right:6px;">${vics}</div>
-                <button class="btn-more" style="background:transparent; border:1px solid #555; color:#888; margin-top:20px;" onclick="document.getElementById('detailModal').style.display='none'">${currentLang==='EN'?'CLOSE':'ЗАКРЫТЬ'}</button>`;
-            
+                <button class="btn-more" style="background:transparent; border:1px solid #555; color:#888; margin-top:20px;" onclick="document.getElementById('detailModal').style.display='none'">${t.close}</button>
+            `;
+
+            document.getElementById('modalData').innerHTML = modalContent;
             document.getElementById('detailModal').style.display = 'block';
             document.getElementById('detailModal').scrollTop = 0;
+        }
+
+        function copyText(text) {
+            navigator.clipboard.writeText(text).then(() => {
+                showToast(translations[currentLang].copy);
+            });
         }
 
         function deleteVictor(itemKey, victorKey, type) {
@@ -1087,7 +1381,13 @@
                     tag: document.getElementById('itemTag').value,
                     verifier: document.getElementById('itemVerifier').value,
                     img: document.getElementById('itemImgURL').value,
-                    vid, order: demons.length
+                    vid,
+                    password: document.getElementById('itemPassword').value,
+                    length: document.getElementById('itemLength').value,
+                    objects: document.getElementById('itemObjects').value,
+                    version: document.getElementById('itemVersion').value,
+                    score: document.getElementById('itemScore').value,
+                    order: demons.length
                 });
                 closeAdmin();
             } else if (act === 'add_challenge') {
@@ -1098,7 +1398,13 @@
                     tag: document.getElementById('itemTag').value,
                     verifier: document.getElementById('itemVerifier').value,
                     img: document.getElementById('itemImgURL').value,
-                    vid, order: challenges.length
+                    vid,
+                    password: document.getElementById('itemPassword').value,
+                    length: document.getElementById('itemLength').value,
+                    objects: document.getElementById('itemObjects').value,
+                    version: document.getElementById('itemVersion').value,
+                    score: document.getElementById('itemScore').value,
+                    order: challenges.length
                 });
                 closeAdmin();
             } else if (act === 'add_creator') {
@@ -1148,6 +1454,21 @@
             document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') ? 'block' : 'none';
             document.getElementById('fields_victor').style.display = (a === 'add_victor' || a === 'add_challenge_victor') ? 'block' : 'none';
 
+            // Обновляем плейсхолдеры в админке в зависимости от языка
+            const t = translations[currentLang];
+            document.getElementById('itemName').placeholder = t.namePlaceholder;
+            document.getElementById('itemVal').placeholder = t.authorPlaceholder;
+            document.getElementById('itemID').placeholder = t.idPlaceholder;
+            document.getElementById('itemTag').placeholder = t.tagPlaceholder;
+            document.getElementById('itemVerifier').placeholder = t.verifierPlaceholder;
+            document.getElementById('itemImgURL').placeholder = t.imgPlaceholder;
+            document.getElementById('itemVid').placeholder = t.vidPlaceholder;
+            document.getElementById('itemPassword').placeholder = t.passwordPlaceholder;
+            document.getElementById('itemLength').placeholder = t.lengthPlaceholder;
+            document.getElementById('itemObjects').placeholder = t.objectsPlaceholder;
+            document.getElementById('itemVersion').placeholder = t.versionPlaceholder;
+            document.getElementById('itemScore').placeholder = t.scorePlaceholder;
+
             if (a === 'add_victor') {
                 const sel = document.getElementById('selectDemonVictim');
                 sel.innerHTML = demons.map(d => `<option value="${d.key}">${escapeHtml(d.name)}</option>`).join('');
@@ -1162,33 +1483,34 @@
         function loadPendingRecords() {
             recordsRef.orderByChild('timestamp').once('value', snapshot => {
                 const container = document.getElementById('moderationContainer');
+                const t = translations[currentLang];
                 container.innerHTML = '';
                 let hasPending = false;
                 snapshot.forEach(child => {
                     const rec = child.val();
                     if (rec.status === 'pending') {
                         hasPending = true;
-                        const typeDisplay = rec.itemType === 'challenge' ? 'Челлендж' : 'Демон';
+                        const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
                         const item = document.createElement('div');
                         item.className = 'moderation-item';
                         item.innerHTML = `
-                            <p><strong>Тип:</strong> ${typeDisplay}</p>
-                            <p><strong>Уровень:</strong> ${escapeHtml(rec.levelName)}</p>
-                            <p><strong>Ник:</strong> ${escapeHtml(rec.nickname)}</p>
-                            <p><strong>Проценты:</strong> ${rec.percent}%</p>
+                            <p><strong>${t.radioDemon}:</strong> ${typeDisplay}</p>
+                            <p><strong>${t.recordLevel}:</strong> ${escapeHtml(rec.levelName)}</p>
+                            <p><strong>${t.recordNickname}:</strong> ${escapeHtml(rec.nickname)}</p>
+                            <p><strong>${t.recordPercent}:</strong> ${rec.percent}%</p>
                             <p><strong>YouTube:</strong> <a href="${rec.proof}" target="_blank">ссылка</a></p>
                             <p><strong>Raw:</strong> <a href="${rec.raw}" target="_blank">ссылка</a></p>
                             ${rec.wish ? `<p><strong>Пожелание:</strong> ${escapeHtml(rec.wish)}</p>` : ''}
                             <p><strong>Дата:</strong> ${new Date(rec.timestamp).toLocaleString()}</p>
                             <div class="moderation-buttons">
-                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.itemType || 'demon'}')">✅ Принять</button>
-                                <button class="btn-reject" onclick="rejectRecord('${child.key}')">❌ Отклонить</button>
+                                <button class="btn-approve" onclick="approveRecord('${child.key}', '${rec.levelKey}', '${rec.nickname.replace(/'/g, "\\'")}', ${rec.percent}, '${rec.itemType || 'demon'}')">✅ ${t.statusApproved}</button>
+                                <button class="btn-reject" onclick="rejectRecord('${child.key}')">❌ ${t.statusRejected}</button>
                             </div>
                         `;
                         container.appendChild(item);
                     }
                 });
-                if (!hasPending) container.innerHTML = '<p style="text-align:center; color:#888;">Нет ожидающих рекордов</p>';
+                if (!hasPending) container.innerHTML = `<p style="text-align:center; color:#888;">${t.noPending}</p>`;
             });
         }
 
@@ -1217,7 +1539,7 @@
         function switchRecordType() {
             const type = document.querySelector('input[name="recordType"]:checked').value;
             const select = document.getElementById('recordLevel');
-            select.innerHTML = '<option value="">Выберите уровень</option>';
+            select.innerHTML = '<option value="">' + translations[currentLang].recordLevel + '</option>';
             let items = type === 'demon' ? demons : challenges;
             items.forEach(item => {
                 select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
@@ -1286,9 +1608,11 @@
                 snapshot.forEach(child => records.push({ key: child.key, ...child.val() }));
                 records.sort((a, b) => b.timestamp - a.timestamp);
                 const container = document.getElementById('recordsList');
+                const t = translations[currentLang];
                 container.innerHTML = '';
                 records.forEach(rec => {
-                    const typeDisplay = rec.itemType === 'challenge' ? 'Челлендж' : 'Демон';
+                    const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : t.radioDemon;
+                    const statusText = rec.status === 'pending' ? t.statusPending : (rec.status === 'approved' ? t.statusApproved : t.statusRejected);
                     const card = document.createElement('div');
                     card.className = 'record-card';
                     card.innerHTML = `
@@ -1299,7 +1623,7 @@
                         <p><i class="fas fa-video"></i> <a href="${rec.raw}" target="_blank">Raw</a></p>
                         ${rec.wish ? `<p>💬 ${escapeHtml(rec.wish)}</p>` : ''}
                         <p style="color:#888; font-size:0.8rem;">${new Date(rec.timestamp).toLocaleString()}</p>
-                        <p>Статус: ${rec.status === 'pending' ? '⏳ На модерации' : (rec.status === 'approved' ? '✅ Принят' : '❌ Отклонён')}</p>
+                        <p>${statusText}</p>
                     `;
                     container.appendChild(card);
                 });
@@ -1317,7 +1641,7 @@
             const text = "alexgdops.ps.fhgdps.com";
             navigator.clipboard.writeText(text).then(() => {
                 const toast = document.getElementById('copyToast');
-                toast.innerText = currentLang === 'RU' ? 'Адрес скопирован!' : 'Address copied!';
+                toast.innerText = translations[currentLang].gdpsCopied;
                 toast.className = 'show';
                 setTimeout(() => toast.className = '', 2000);
             }).catch(() => alert('Не удалось скопировать'));
@@ -1326,7 +1650,7 @@
         function copyID(id) {
             navigator.clipboard.writeText(id || '');
             const t = document.getElementById("copyToast");
-            t.innerText = currentLang === 'RU' ? 'ID Скопировано!' : 'ID Copied!';
+            t.innerText = translations[currentLang].copyToast;
             t.className = "show";
             setTimeout(() => t.className = "", 3000);
         }
@@ -1335,50 +1659,9 @@
         function toggleLang() {
             currentLang = currentLang === 'RU' ? 'EN' : 'RU';
             document.getElementById('langBtn').innerText = currentLang;
-            const translations = {
-                RU: {
-                    welcomeT: "ALEX GDPS",
-                    play: "СКАЧАТЬ ИГРУ",
-                    list: "DEMON LIST",
-                    searchP: "Поиск...",
-                    verify: "Критерии верификации",
-                    toast: "ID Скопировано!",
-                    navDownloadText: "Скачать",
-                    navHome: "Главная",
-                    dlTitle: "СКАЧАТЬ ИГРУ",
-                    dlVersion: "Версия 2.2081",
-                    dlDescPC: "Скачать .zip архив для игры на компьютере",
-                    dlDescAnd: "Скачать .apk файл для игры на телефоне"
-                },
-                EN: {
-                    welcomeT: "ALEX GDPS",
-                    play: "DOWNLOAD GAME",
-                    list: "DEMON LIST",
-                    searchP: "Search...",
-                    verify: "Verification Criteria",
-                    toast: "ID Copied!",
-                    navDownloadText: "Download",
-                    navHome: "Home",
-                    dlTitle: "DOWNLOAD GAME",
-                    dlVersion: "Version 2.2081",
-                    dlDescPC: "Download .zip archive to play on PC",
-                    dlDescAnd: "Download .apk file to play on mobile"
-                }
-            };
-            const t = translations[currentLang];
-            document.getElementById('welcomeTitle').innerText = t.welcomeT;
-            document.getElementById('btnPlay').innerText = t.play;
-            document.getElementById('btnList').innerText = t.list;
-            document.getElementById('searchInput').placeholder = t.searchP;
-            document.getElementById('verifyLink').innerText = t.verify;
-            document.getElementById('copyToast').innerText = t.toast;
-            document.getElementById('navDownloadText').innerText = t.navDownloadText;
-            document.getElementById('navHome').innerText = t.navHome;
-            document.getElementById('dlTitle').innerText = t.dlTitle;
-            document.getElementById('dlVersion').innerText = t.dlVersion;
-            document.getElementById('dlDescPC').innerText = t.dlDescPC;
-            document.getElementById('dlDescAnd').innerText = t.dlDescAnd;
-            render();
+            applyTranslations();
+            // Обновить плейсхолдеры в админке (они могут быть видны)
+            toggleAdmFields(); // это обновит плейсхолдеры
         }
 
         // ================== Техперерыв ==================
@@ -1392,6 +1675,11 @@
                 overlay.style.display = 'none';
                 document.body.style.overflow = '';
             }
+        });
+
+        // ================== Инициализация перевода при загрузке ==================
+        window.addEventListener('load', () => {
+            applyTranslations();
         });
     </script>
 
