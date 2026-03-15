@@ -1890,6 +1890,54 @@
             }
         }
 
+        function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
+    if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
+
+    if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+        alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
+        return;
+    }
+
+    const weight = getLevelWeight(levelKey, type);
+    const victorData = { name: nickname, perc: percent + '%', att: '0' };
+    const path = type === 'challenge' ? `challenges/${levelKey}/victors` : `demons/${levelKey}/victors`;
+
+    db.ref(path).push(victorData)
+        .then(() => {
+            return playersRef.child(nickname).once('value').then(snap => {
+                const player = snap.val() || { score: 0, hardest: null, records: {} };
+                if (player.records && player.records[levelKey]) {
+                    alert('Этот игрок уже проходил данный уровень! Рекорд принят, но очки не начислены повторно.');
+                } else {
+                    const newRecord = {
+                        levelKey,
+                        levelName,
+                        type,
+                        percent,
+                        timestamp: firebase.database.ServerValue.TIMESTAMP
+                    };
+                    player.records = player.records || {};
+                    player.records[levelKey] = newRecord;
+                    player.score = (player.score || 0) + weight;
+                    const hardestWeight = getLevelWeight(player.hardest?.levelKey, player.hardest?.type) || 0;
+                    if (weight > hardestWeight) {
+                        player.hardest = { levelKey, levelName, type };
+                    }
+                }
+                return playersRef.child(nickname).set(player);
+            });
+        })
+        .then(() => {
+            return db.ref(`recordRequests/${recordKey}`).remove();
+        })
+        .then(() => {
+            alert('Рекорд принят!');
+            loadPendingRecords();
+            loadRankings();
+        })
+        .catch(err => alert('Ошибка: ' + err.message));
+}
+
         function toggleAdmFields() {
             const a = document.getElementById('admAction').value;
             document.getElementById('moderationContainer').style.display = 'none';
@@ -1964,11 +2012,20 @@
             return isNaN(weight) ? 0 : weight;
         }
 
-        playersRef.child(nickname).once('value', snap => {
+        function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
+            if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
+
+            if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
+                alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
+                return;
+                
+playersRef.child(nickname).once('value', snap => {
     const player = snap.val() || { score: 0, hardest: null, records: {} };
     // обновляем счёт и список пройденных уровней
     return playersRef.child(nickname).set(player);
-    });
+});
+            
+            }
 
             const weight = getLevelWeight(levelKey, type);
             const victorData = { name: nickname, perc: percent + '%', att: '0' };
@@ -2008,7 +2065,7 @@
                     loadRankings();
                 })
                 .catch(err => alert('Ошибка: ' + err.message));
-
+        }
 
         function rejectRecord(recordKey) {
             if (!confirm('Отклонить этот рекорд?')) return;
