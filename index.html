@@ -1964,13 +1964,11 @@
             return isNaN(weight) ? 0 : weight;
         }
 
-        function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
-            if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
-
-            if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
-                alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
-                return;
-            }
+        playersRef.child(nickname).once('value', snap => {
+    const player = snap.val() || { score: 0, hardest: null, records: {} };
+    // обновляем счёт и список пройденных уровней
+    return playersRef.child(nickname).set(player);
+    });
 
             const weight = getLevelWeight(levelKey, type);
             const victorData = { name: nickname, perc: percent + '%', att: '0' };
@@ -2010,7 +2008,7 @@
                     loadRankings();
                 })
                 .catch(err => alert('Ошибка: ' + err.message));
-        }
+
 
         function rejectRecord(recordKey) {
             if (!confirm('Отклонить этот рекорд?')) return;
