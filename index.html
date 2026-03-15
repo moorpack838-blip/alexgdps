@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
+        /* Все стили из последней версии (с отдельной вкладкой изменений) */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -862,7 +863,6 @@
         </div>
     </main>
 
-    <!-- Вкладка изменений -->
     <main id="changesSection" class="section-page">
         <div class="hero-title">
             <h2 id="changesTitle">ПОСЛЕДНИЕ ИЗМЕНЕНИЯ</h2>
@@ -921,6 +921,7 @@
                 <option value="maintenance">🔧 Техперерыв вкл/выкл</option>
                 <option value="drag_drop">🖱️ Drag & Drop режим</option>
                 <option value="moderate_records">🛡️ Модерация рекордов</option>
+                <option value="edit_level">✏️ Редактировать Демона/Челлендж</option>
             </select>
             <div id="fields_main">
                 <input type="text" id="itemName" placeholder="Название">
@@ -945,6 +946,30 @@
                 <input type="text" id="vicName" placeholder="Ник игрока">
                 <input type="text" id="vicPerc" placeholder="Проценты">
                 <input type="text" id="vicAtt" placeholder="Попытки">
+            </div>
+
+            <!-- Поля для редактирования уровня -->
+            <div id="fields_edit" style="display:none;">
+                <select id="editTypeSelect">
+                    <option value="demon">Демон</option>
+                    <option value="challenge">Челлендж</option>
+                </select>
+                <select id="editLevelSelect" style="width:100%; margin:10px 0;">
+                    <option value="">Выберите уровень</option>
+                </select>
+                <input type="text" id="editName" placeholder="Название">
+                <input type="text" id="editAuthor" placeholder="Автор">
+                <input type="text" id="editID" placeholder="ID Уровня">
+                <input type="text" id="editTag" placeholder="Тег (напр. Top 1)">
+                <input type="text" id="editVerifier" placeholder="Верифер">
+                <input type="text" id="editImgURL" placeholder="Ссылка на картинку">
+                <input type="text" id="editVid" placeholder="Ссылка на YouTube">
+                <input type="text" id="editPassword" placeholder="Пароль (необязательно)">
+                <input type="text" id="editLength" placeholder="Длина (напр. 0:50)">
+                <input type="text" id="editObjects" placeholder="Объекты (напр. 20 251)">
+                <input type="text" id="editVersion" placeholder="Версия (напр. 1.9)">
+                <input type="text" id="editScore" placeholder="Счёт (напр. 0.60)">
+                <input type="number" id="editPosition" placeholder="Позиция (1 - N) [необязательно]" min="1">
             </div>
 
             <div id="moderationContainer" class="moderation-container" style="display:none;"></div>
@@ -1592,6 +1617,26 @@
             changesRef.push(change);
         }
 
+        // ================== Функция для форматирования текста изменений ==================
+        function formatChangeText(change) {
+            const t = translations[currentLang];
+            let text = '';
+            const levelSpan = `<span class="clickable-level" onclick="showInfoByKey('${change.levelKey}', '${change.listType}')">${escapeHtml(change.levelName)}</span>`;
+
+            if (change.action === 'place') {
+                text = `${levelSpan} ${t.changePlace.replace('{pos}', change.newPos)}`;
+                if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
+                if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
+            } else if (change.action === 'remove') {
+                text = `${levelSpan} ${t.changeRemove.replace('{pos}', change.oldPos)}`;
+            } else if (change.action === 'move') {
+                text = `${levelSpan} ${t.changeMove.replace('{oldPos}', change.oldPos).replace('{newPos}', change.newPos)}`;
+                if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
+                if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
+            }
+            return text;
+        }
+
         // ================== Загрузка изменений ==================
         function loadChanges() {
             changesRef.orderByChild('timestamp').limitToLast(100).once('value', snapshot => {
@@ -1744,6 +1789,7 @@
         function closeAdmin() {
             document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('fields_main').style.display = 'block';
+            document.getElementById('fields_edit').style.display = 'none';
             document.getElementById('moderationContainer').style.display = 'none';
         }
 
@@ -1752,6 +1798,88 @@
             const match = url.match(/(?:youtu\.be\/|v=)([^&]+)/);
             return match ? match[1] : url;
         }
+
+        function toggleAdmFields() {
+            const a = document.getElementById('admAction').value;
+            // Скрыть все блоки
+            document.getElementById('fields_edit').style.display = 'none';
+            document.getElementById('moderationContainer').style.display = 'none';
+            document.getElementById('fields_main').style.display = 'none';
+            document.getElementById('fields_victor').style.display = 'none';
+
+            if (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') {
+                document.getElementById('fields_main').style.display = 'block';
+            } else if (a === 'add_victor' || a === 'add_challenge_victor') {
+                document.getElementById('fields_victor').style.display = 'block';
+            } else if (a === 'moderate_records') {
+                document.getElementById('moderationContainer').style.display = 'block';
+                loadPendingRecords();
+            } else if (a === 'edit_level') {
+                document.getElementById('fields_edit').style.display = 'block';
+                populateEditLevelSelect();
+            }
+
+            // Обновляем плейсхолдеры
+            const t = translations[currentLang];
+            document.getElementById('itemName').placeholder = t.namePlaceholder;
+            document.getElementById('itemVal').placeholder = t.authorPlaceholder;
+            document.getElementById('itemID').placeholder = t.idPlaceholder;
+            document.getElementById('itemTag').placeholder = t.tagPlaceholder;
+            document.getElementById('itemVerifier').placeholder = t.verifierPlaceholder;
+            document.getElementById('itemImgURL').placeholder = t.imgPlaceholder;
+            document.getElementById('itemVid').placeholder = t.vidPlaceholder;
+            document.getElementById('itemPassword').placeholder = t.passwordPlaceholder;
+            document.getElementById('itemLength').placeholder = t.lengthPlaceholder;
+            document.getElementById('itemObjects').placeholder = t.objectsPlaceholder;
+            document.getElementById('itemVersion').placeholder = t.versionPlaceholder;
+            document.getElementById('itemScore').placeholder = t.scorePlaceholder;
+            document.getElementById('itemPosition').placeholder = t.positionPlaceholder;
+
+            if (a === 'add_victor') {
+                const sel = document.getElementById('selectDemonVictim');
+                sel.innerHTML = demons.map(d => `<option value="${d.key}">${escapeHtml(d.name)}</option>`).join('');
+                const sel2 = document.getElementById('selectChallengeVictim');
+                sel2.innerHTML = challenges.map(c => `<option value="${c.key}">${escapeHtml(c.name)}</option>`).join('');
+            }
+        }
+
+        // Функции для редактирования
+        function populateEditLevelSelect() {
+            const type = document.getElementById('editTypeSelect').value;
+            const select = document.getElementById('editLevelSelect');
+            select.innerHTML = '<option value="">Выберите уровень</option>';
+            let items = type === 'demon' ? demons : challenges;
+            items.forEach(item => {
+                select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
+            });
+        }
+
+        document.getElementById('editTypeSelect').addEventListener('change', function() {
+            populateEditLevelSelect();
+        });
+
+        document.getElementById('editLevelSelect').addEventListener('change', function() {
+            const key = this.value;
+            const type = document.getElementById('editTypeSelect').value;
+            if (!key) return;
+            const item = type === 'demon' ? demons.find(d => d.key === key) : challenges.find(c => c.key === key);
+            if (item) {
+                document.getElementById('editName').value = item.name || '';
+                document.getElementById('editAuthor').value = item.author || '';
+                document.getElementById('editID').value = item.levelID || '';
+                document.getElementById('editTag').value = item.tag || '';
+                document.getElementById('editVerifier').value = item.verifier || '';
+                document.getElementById('editImgURL').value = item.img || '';
+                document.getElementById('editVid').value = item.vid || '';
+                document.getElementById('editPassword').value = item.password || '';
+                document.getElementById('editLength').value = item.length || '';
+                document.getElementById('editObjects').value = item.objects || '';
+                document.getElementById('editVersion').value = item.version || '';
+                document.getElementById('editScore').value = item.score || '';
+                const order = item.order;
+                document.getElementById('editPosition').value = order !== undefined ? order + 1 : '';
+            }
+        });
 
         function processAdmin() {
             if (!isAdmin) { alert('Нет доступа!'); return; }
@@ -1887,85 +2015,95 @@
                 document.getElementById('fields_victor').style.display = 'none';
                 document.getElementById('moderationContainer').style.display = 'block';
                 loadPendingRecords();
-            }
-        }
+            } else if (act === 'edit_level') {
+                const type = document.getElementById('editTypeSelect').value;
+                const key = document.getElementById('editLevelSelect').value;
+                if (!key) { alert('Выберите уровень'); return; }
 
-        function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
-    if (!confirm('Принять этот рекорд? Он будет добавлен в victors и игроку начислены очки.')) return;
-
-    if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
-        alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
-        return;
-    }
-
-    const weight = getLevelWeight(levelKey, type);
-    const victorData = { name: nickname, perc: percent + '%', att: '0' };
-    const path = type === 'challenge' ? `challenges/${levelKey}/victors` : `demons/${levelKey}/victors`;
-
-    db.ref(path).push(victorData)
-        .then(() => {
-            return playersRef.child(nickname).once('value').then(snap => {
-                const player = snap.val() || { score: 0, hardest: null, records: {} };
-                if (player.records && player.records[levelKey]) {
-                    alert('Этот игрок уже проходил данный уровень! Рекорд принят, но очки не начислены повторно.');
+                const name = document.getElementById('editName').value.trim();
+                const author = document.getElementById('editAuthor').value.trim();
+                const levelID = document.getElementById('editID').value.trim();
+                const tag = document.getElementById('editTag').value.trim();
+                const verifier = document.getElementById('editVerifier').value.trim();
+                const img = document.getElementById('editImgURL').value.trim();
+                let vid = extractVideoId(document.getElementById('editVid').value);
+                const password = document.getElementById('editPassword').value.trim();
+                const length = document.getElementById('editLength').value.trim();
+                const objects = document.getElementById('editObjects').value.trim();
+                const version = document.getElementById('editVersion').value.trim();
+                const score = document.getElementById('editScore').value.trim();
+                const positionInput = document.getElementById('editPosition').value;
+                let newOrder;
+                if (positionInput && !isNaN(parseInt(positionInput))) {
+                    newOrder = Math.max(0, parseInt(positionInput) - 1);
                 } else {
-                    const newRecord = {
-                        levelKey,
-                        levelName,
-                        type,
-                        percent,
-                        timestamp: firebase.database.ServerValue.TIMESTAMP
-                    };
-                    player.records = player.records || {};
-                    player.records[levelKey] = newRecord;
-                    player.score = (player.score || 0) + weight;
-                    const hardestWeight = getLevelWeight(player.hardest?.levelKey, player.hardest?.type) || 0;
-                    if (weight > hardestWeight) {
-                        player.hardest = { levelKey, levelName, type };
-                    }
+                    newOrder = null; // не менять позицию
                 }
-                return playersRef.child(nickname).set(player);
-            });
-        })
-        .then(() => {
-            return db.ref(`recordRequests/${recordKey}`).remove();
-        })
-        .then(() => {
-            alert('Рекорд принят!');
-            loadPendingRecords();
-            loadRankings();
-        })
-        .catch(err => alert('Ошибка: ' + err.message));
-}
 
-        function toggleAdmFields() {
-            const a = document.getElementById('admAction').value;
-            document.getElementById('moderationContainer').style.display = 'none';
-            document.getElementById('fields_main').style.display = (a === 'add_demon' || a === 'add_challenge' || a === 'add_creator') ? 'block' : 'none';
-            document.getElementById('fields_victor').style.display = (a === 'add_victor' || a === 'add_challenge_victor') ? 'block' : 'none';
+                const items = type === 'demon' ? demons : challenges;
+                const oldItem = items.find(i => i.key === key);
+                if (!oldItem) return;
+                const oldOrder = oldItem.order;
 
-            const t = translations[currentLang];
-            document.getElementById('itemName').placeholder = t.namePlaceholder;
-            document.getElementById('itemVal').placeholder = t.authorPlaceholder;
-            document.getElementById('itemID').placeholder = t.idPlaceholder;
-            document.getElementById('itemTag').placeholder = t.tagPlaceholder;
-            document.getElementById('itemVerifier').placeholder = t.verifierPlaceholder;
-            document.getElementById('itemImgURL').placeholder = t.imgPlaceholder;
-            document.getElementById('itemVid').placeholder = t.vidPlaceholder;
-            document.getElementById('itemPassword').placeholder = t.passwordPlaceholder;
-            document.getElementById('itemLength').placeholder = t.lengthPlaceholder;
-            document.getElementById('itemObjects').placeholder = t.objectsPlaceholder;
-            document.getElementById('itemVersion').placeholder = t.versionPlaceholder;
-            document.getElementById('itemScore').placeholder = t.scorePlaceholder;
-            document.getElementById('itemPosition').placeholder = t.positionPlaceholder;
+                // Если позиция не указана или не меняется
+                if (newOrder === null || newOrder === oldOrder) {
+                    const updates = {};
+                    updates[`/${type}s/${key}/name`] = name || oldItem.name;
+                    updates[`/${type}s/${key}/author`] = author || oldItem.author;
+                    updates[`/${type}s/${key}/levelID`] = levelID || oldItem.levelID;
+                    updates[`/${type}s/${key}/tag`] = tag || oldItem.tag;
+                    updates[`/${type}s/${key}/verifier`] = verifier || oldItem.verifier;
+                    updates[`/${type}s/${key}/img`] = img || oldItem.img;
+                    updates[`/${type}s/${key}/vid`] = vid || oldItem.vid;
+                    updates[`/${type}s/${key}/password`] = password || oldItem.password;
+                    updates[`/${type}s/${key}/length`] = length || oldItem.length;
+                    updates[`/${type}s/${key}/objects`] = objects || oldItem.objects;
+                    updates[`/${type}s/${key}/version`] = version || oldItem.version;
+                    updates[`/${type}s/${key}/score`] = score || oldItem.score;
+                    // order не меняем
+                    db.ref().update(updates).then(() => {
+                        alert('Уровень обновлён');
+                        closeAdmin();
+                    }).catch(err => alert('Ошибка: ' + err.message));
+                    return;
+                }
 
-            if (a === 'add_victor') {
-                const sel = document.getElementById('selectDemonVictim');
-                sel.innerHTML = demons.map(d => `<option value="${d.key}">${escapeHtml(d.name)}</option>`).join('');
-            }
-            if (a === 'add_challenge_victor') {
-                const sel = document.getElementById('selectChallengeVictim');
-                sel.innerHTML = challenges.map(c => `<option value="${c.key}">${escapeHtml(c.name)}</option>`).join('');
+                // Иначе нужно переставить
+                let newItems = [...items];
+                const itemIndex = newItems.findIndex(i => i.key === key);
+                if (itemIndex === -1) return;
+                const [movedItem] = newItems.splice(itemIndex, 1);
+                newItems.splice(newOrder, 0, movedItem);
+
+                const updates = {};
+                newItems.forEach((item, idx) => {
+                    if (item.order !== idx) {
+                        updates[`/${type}s/${item.key}/order`] = idx;
+                    }
+                });
+                updates[`/${type}s/${key}/name`] = name || oldItem.name;
+                updates[`/${type}s/${key}/author`] = author || oldItem.author;
+                updates[`/${type}s/${key}/levelID`] = levelID || oldItem.levelID;
+                updates[`/${type}s/${key}/tag`] = tag || oldItem.tag;
+                updates[`/${type}s/${key}/verifier`] = verifier || oldItem.verifier;
+                updates[`/${type}s/${key}/img`] = img || oldItem.img;
+                updates[`/${type}s/${key}/vid`] = vid || oldItem.vid;
+                updates[`/${type}s/${key}/password`] = password || oldItem.password;
+                updates[`/${type}s/${key}/length`] = length || oldItem.length;
+                updates[`/${type}s/${key}/objects`] = objects || oldItem.objects;
+                updates[`/${type}s/${key}/version`] = version || oldItem.version;
+                updates[`/${type}s/${key}/score`] = score || oldItem.score;
+
+                db.ref().update(updates).then(() => {
+                    alert('Уровень обновлён и перемещён');
+                    setTimeout(() => {
+                        db.ref(type + 's').once('value', s => {
+                            const newList = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
+                            logChange('move', name, key, oldOrder+1, newOrder+1, type, newList);
+                        });
+                    }, 500);
+                    closeAdmin();
+                }).catch(err => alert('Ошибка: ' + err.message));
             }
         }
 
@@ -2018,13 +2156,6 @@
             if (!/^[a-zA-Z0-9_]+$/.test(nickname)) {
                 alert('Ник содержит недопустимые символы. Рекорд не может быть принят.');
                 return;
-                
-playersRef.child(nickname).once('value', snap => {
-    const player = snap.val() || { score: 0, hardest: null, records: {} };
-    // обновляем счёт и список пройденных уровней
-    return playersRef.child(nickname).set(player);
-});
-            
             }
 
             const weight = getLevelWeight(levelKey, type);
