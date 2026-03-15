@@ -112,6 +112,7 @@
         .section-page.active { display: block; }
         @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
+        /* Старый дизайн главной */
         .welcome-hero { min-height: calc(100vh - 80px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
         .welcome-hero h1 { font-family: 'Montserrat'; font-size: clamp(3rem, 8vw, 6rem); margin: 0; line-height: 1.1; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 10px 30px rgba(102, 252, 241, 0.3); }
         .welcome-hero p { font-size: 1.15rem; color: var(--text-main); max-width: 700px; margin: 25px 0 40px; line-height: 1.7; }
@@ -120,6 +121,14 @@
         .btn-outline { padding: 16px 40px; border-radius: 12px; border: 2px solid var(--accent-cyan); color: var(--accent-cyan); text-decoration: none; font-weight: 900; font-size: 1rem; transition: 0.3s; background: transparent; cursor: pointer; font-family: 'Poppins'; text-transform: uppercase;}
         .btn-main:hover { transform: translateY(-4px); box-shadow: 0 15px 35px rgba(34, 197, 94, 0.4); background: #16a34a; }
         .btn-outline:hover { background: var(--accent-cyan); color: #0b0c10; transform: translateY(-4px); box-shadow: 0 15px 35px rgba(102, 252, 241, 0.2); }
+
+        .home-video-section { max-width: 900px; margin: 0 auto 80px; padding: 0 20px; text-align: center; }
+        .home-video-label { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 18px; }
+        .home-video-line { flex: 1; height: 1px; background: rgba(102, 252, 241, 0.2); max-width: 120px; }
+        .home-video-tag { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-main); display: flex; align-items: center; }
+        .home-video-title { font-family: 'Montserrat'; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; margin: 0 0 30px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
+        .home-video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 1px solid rgba(102, 252, 241, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(102, 252, 241, 0.08); }
+        .home-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
         .download-container { max-width: 800px; margin: 40px auto; text-align: center; background: var(--card-bg); padding: 50px 30px; border-radius: 25px; border: 1px solid rgba(102, 252, 241, 0.15); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .dl-title { font-family: 'Montserrat'; font-size: 3rem; margin-bottom: 10px; color: #fff; }
@@ -290,14 +299,6 @@
         @keyframes fadeInUp { from { opacity:0; transform:translateX(-50%) translateY(10px); } to { opacity:1; transform:translateX(-50%) translateY(0); } }
 
         .record-item { display: flex; justify-content: space-between; align-items: center; padding: 12px 18px; background: rgba(255,255,255,0.03); margin-bottom: 8px; border-radius: 12px; font-size: 0.95rem; border: 1px solid rgba(255,255,255,0.05); gap: 8px; }
-
-        .home-video-section { max-width: 900px; margin: 0 auto 80px; padding: 0 20px; text-align: center; }
-        .home-video-label { display: flex; align-items: center; justify-content: center; gap: 16px; margin-bottom: 18px; }
-        .home-video-line { flex: 1; height: 1px; background: rgba(102, 252, 241, 0.2); max-width: 120px; }
-        .home-video-tag { font-size: 0.8rem; font-weight: 700; text-transform: uppercase; letter-spacing: 2px; color: var(--text-main); display: flex; align-items: center; }
-        .home-video-title { font-family: 'Montserrat'; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; margin: 0 0 30px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
-        .home-video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 1px solid rgba(102, 252, 241, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(102, 252, 241, 0.08); }
-        .home-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
         .records-container {
             max-width: 1000px;
@@ -705,7 +706,6 @@
             </div>
             <button class="nav-item" onclick="openSection('recordsSection')" id="navRecords">Рекорды</button>
             <button class="nav-item" onclick="openSection('rankingsSection')" id="navRankings">Топ игроков</button>
-            <button class="nav-item" onclick="openSection('changesSection')" id="navChanges">Изменения</button>
             <button class="btn-download-nav" onclick="openSection('downloadSection')">
                 <i class="fas fa-download"></i> <span id="navDownloadText">Скачать</span>
             </button>
@@ -743,9 +743,6 @@
         </button>
         <button class="m-btn" onclick="openSection('rankingsSection'); closeBurger();">
             <i class="fas fa-chart-line"></i> Топ игроков
-        </button>
-        <button class="m-btn" onclick="openSection('changesSection'); closeBurger();">
-            <i class="fas fa-history"></i> Изменения
         </button>
         <button class="m-btn green" onclick="openSection('downloadSection'); closeBurger();">
             <i class="fas fa-download"></i> Скачать игру
@@ -935,6 +932,7 @@
                     <input type="text" id="itemObjects" placeholder="Объекты (напр. 20 251)">
                     <input type="text" id="itemVersion" placeholder="Версия (напр. 1.9)">
                     <input type="text" id="itemScore" placeholder="Счёт (напр. 0.60)">
+                    <input type="number" id="itemPosition" placeholder="Позиция (1 - N) [необязательно]" min="1">
                 </div>
             </div>
             <div id="fields_victor" style="display:none;">
@@ -1024,7 +1022,6 @@
                 navListsText: "Списки",
                 navRecords: "Рекорды",
                 navRankings: "Топ игроков",
-                navChanges: "Изменения",
                 navDownloadText: "Скачать",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.",
@@ -1103,6 +1100,7 @@
                 objectsPlaceholder: "Объекты (напр. 20 251)",
                 versionPlaceholder: "Версия (напр. 1.9)",
                 scorePlaceholder: "Счёт (напр. 0.60)",
+                positionPlaceholder: "Позиция (1 - N) [необязательно]",
                 execute: "ВЫПОЛНИТЬ",
                 noPending: "Нет ожидающих рекордов",
                 rank: "Ранг",
@@ -1119,7 +1117,6 @@
                 navListsText: "Lists",
                 navRecords: "Records",
                 navRankings: "Player Rankings",
-                navChanges: "Changes",
                 navDownloadText: "Download",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Dive into the world of the most ambitious Geometry Dash private server. Stability, unique levels, and the strongest community.",
@@ -1198,6 +1195,7 @@
                 objectsPlaceholder: "Objects (e.g. 20 251)",
                 versionPlaceholder: "Version (e.g. 1.9)",
                 scorePlaceholder: "Score (e.g. 0.60)",
+                positionPlaceholder: "Position (1 - N) [optional]",
                 execute: "EXECUTE",
                 noPending: "No pending records",
                 rank: "Rank",
@@ -1218,7 +1216,6 @@
             document.getElementById('navListsText').innerHTML = `${t.navListsText} <i class="fas fa-caret-down"></i>`;
             document.getElementById('navRecords').innerText = t.navRecords;
             document.getElementById('navRankings').innerText = t.navRankings;
-            document.getElementById('navChanges').innerText = t.navChanges;
             document.getElementById('navDownloadText').innerText = t.navDownloadText;
             document.getElementById('welcomeTitle').innerText = t.welcomeTitle;
             document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
@@ -1534,8 +1531,7 @@
             updates[`/${type}s/${items[index].key}/order`] = target;
             updates[`/${type}s/${items[target].key}/order`] = index;
             db.ref().update(updates).then(() => {
-                // Логируем перемещение (после обновления получим новый список через on, но для простоты пока не логируем)
-                // Можно также вызвать logChange, но тогда нужно получить новый список
+                // можно вызвать logChange, но для простоты пока не логируем
             });
         }
 
@@ -1758,6 +1754,23 @@
 
             if (act === 'add_demon') {
                 let vid = extractVideoId(document.getElementById('itemVid').value);
+                const positionInput = document.getElementById('itemPosition').value;
+                let targetOrder;
+                if (positionInput && !isNaN(parseInt(positionInput))) {
+                    targetOrder = Math.max(0, parseInt(positionInput) - 1);
+                } else {
+                    targetOrder = demons.length;
+                }
+                targetOrder = Math.min(targetOrder, demons.length);
+
+                // Сдвиг существующих
+                const updates = {};
+                demons.forEach(d => {
+                    if (d.order >= targetOrder) {
+                        updates[`demons/${d.key}/order`] = d.order + 1;
+                    }
+                });
+
                 const newDemon = {
                     name, author: val,
                     levelID: document.getElementById('itemID').value,
@@ -1770,20 +1783,39 @@
                     objects: document.getElementById('itemObjects').value,
                     version: document.getElementById('itemVersion').value,
                     score: document.getElementById('itemScore').value,
-                    order: demons.length
+                    order: targetOrder
                 };
-                db.ref('demons').push(newDemon).then((ref) => {
-                    setTimeout(() => {
-                        db.ref('demons').once('value', s => {
-                            const newDemons = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
-                            const newPos = newDemons.findIndex(d => d.name === name) + 1;
-                            logChange('place', name, ref.key, null, newPos, 'demon', newDemons);
-                        });
-                    }, 500);
-                });
+
+                db.ref().update(updates).then(() => {
+                    db.ref('demons').push(newDemon).then((ref) => {
+                        setTimeout(() => {
+                            db.ref('demons').once('value', s => {
+                                const newDemons = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
+                                const newPos = newDemons.findIndex(d => d.name === name) + 1;
+                                logChange('place', name, ref.key, null, newPos, 'demon', newDemons);
+                            });
+                        }, 500);
+                    });
+                }).catch(err => alert('Ошибка: ' + err.message));
                 closeAdmin();
             } else if (act === 'add_challenge') {
                 let vid = extractVideoId(document.getElementById('itemVid').value);
+                const positionInput = document.getElementById('itemPosition').value;
+                let targetOrder;
+                if (positionInput && !isNaN(parseInt(positionInput))) {
+                    targetOrder = Math.max(0, parseInt(positionInput) - 1);
+                } else {
+                    targetOrder = challenges.length;
+                }
+                targetOrder = Math.min(targetOrder, challenges.length);
+
+                const updates = {};
+                challenges.forEach(c => {
+                    if (c.order >= targetOrder) {
+                        updates[`challenges/${c.key}/order`] = c.order + 1;
+                    }
+                });
+
                 const newChallenge = {
                     name, author: val,
                     levelID: document.getElementById('itemID').value,
@@ -1796,17 +1828,20 @@
                     objects: document.getElementById('itemObjects').value,
                     version: document.getElementById('itemVersion').value,
                     score: document.getElementById('itemScore').value,
-                    order: challenges.length
+                    order: targetOrder
                 };
-                db.ref('challenges').push(newChallenge).then((ref) => {
-                    setTimeout(() => {
-                        db.ref('challenges').once('value', s => {
-                            const newChallenges = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
-                            const newPos = newChallenges.findIndex(c => c.name === name) + 1;
-                            logChange('place', name, ref.key, null, newPos, 'challenge', newChallenges);
-                        });
-                    }, 500);
-                });
+
+                db.ref().update(updates).then(() => {
+                    db.ref('challenges').push(newChallenge).then((ref) => {
+                        setTimeout(() => {
+                            db.ref('challenges').once('value', s => {
+                                const newChallenges = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
+                                const newPos = newChallenges.findIndex(c => c.name === name) + 1;
+                                logChange('place', name, ref.key, null, newPos, 'challenge', newChallenges);
+                            });
+                        }, 500);
+                    });
+                }).catch(err => alert('Ошибка: ' + err.message));
                 closeAdmin();
             } else if (act === 'add_creator') {
                 db.ref('creators').push({ name, points: parseInt(val) || 0 });
@@ -1868,6 +1903,7 @@
             document.getElementById('itemObjects').placeholder = t.objectsPlaceholder;
             document.getElementById('itemVersion').placeholder = t.versionPlaceholder;
             document.getElementById('itemScore').placeholder = t.scorePlaceholder;
+            document.getElementById('itemPosition').placeholder = t.positionPlaceholder;
 
             if (a === 'add_victor') {
                 const sel = document.getElementById('selectDemonVictim');
