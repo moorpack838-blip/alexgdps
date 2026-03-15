@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили из последней версии (с отдельной вкладкой изменений) */
+        /* Все стили остаются без изменений — они уже в предыдущей версии */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -231,7 +231,7 @@
         .btn-del { background-color: #e74c3c !important; } 
         .ctrl-btn:hover { transform: scale(1.1); filter: brightness(1.2); }
 
-        #admin-trigger { position: fixed; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.5rem; background: none; border: none; color: white; z-index: 1000; transition: 0.3s; display: none; }
+        #admin-trigger { position: fixed; bottom: 20px; left: 20px; opacity: 0.2; cursor: pointer; font-size: 1.5rem; background: none; border: none; color: white; z-index: 1000; transition: 0.3s; display: block; /* Всегда видна */ }
         #admin-trigger:hover { opacity: 1; color: var(--accent-cyan); }
         .admin-form {
             display: none; background: #12151e; padding: 25px 18px; border-radius: 20px;
@@ -948,7 +948,6 @@
                 <input type="text" id="vicAtt" placeholder="Попытки">
             </div>
 
-            <!-- Поля для редактирования уровня -->
             <div id="fields_edit" style="display:none;">
                 <select id="editTypeSelect">
                     <option value="demon">Демон</option>
@@ -981,14 +980,12 @@
 
     <div id="detailModal" class="modal"><div class="modal-content" id="modalData"></div></div>
 
-    <!-- Модальное окно для подачи рекорда (с выбором типа) -->
     <div id="recordModal" class="record-modal">
         <button onclick="closeRecordModal()" style="position:absolute;top:12px;right:12px;width:34px;height:34px;border-radius:8px;background:rgba(255,70,70,0.13);border:1px solid rgba(255,70,70,0.3);color:#ff6868;font-size:1rem;cursor:pointer;display:flex;align-items:center;justify-content:center;">
             <i class="fas fa-times"></i>
         </button>
         <h2 id="recordModalTitle">ПОДАТЬ РЕКОРД</h2>
 
-        <!-- Выбор типа -->
         <div style="display: flex; gap: 20px; justify-content: center; margin: 10px 0;">
             <label style="color: var(--accent-cyan);">
                 <input type="radio" name="recordType" value="demon" checked onchange="switchRecordType()"> <span id="radioDemon">Демон</span>
@@ -1285,18 +1282,16 @@
 
         // ================== Инициализация состояния админа ==================
         if (localStorage.getItem('mxAdmin') === '1') {
-            document.getElementById('admin-trigger').style.display = 'block';
+            // просто оставляем для совместимости
         }
 
         auth.onAuthStateChanged(user => {
             isAdmin = !!user;
-            const trigger = document.getElementById('admin-trigger');
+            // Кнопка админ-панели всегда видна (стили в CSS уже заданы)
             if (isAdmin) {
                 localStorage.setItem('mxAdmin', '1');
-                trigger.style.display = 'block';
             } else {
                 localStorage.removeItem('mxAdmin');
-                trigger.style.display = 'none';
                 isDeleteMode = false;
                 isDragDropMode = false;
             }
@@ -1537,6 +1532,9 @@
             db.ref().update(updates).then(() => {
                 showToast('Порядок обновлён!');
                 logChange('move', levelName, levelKey, oldPos, newPos, type, newItems);
+                // После изменения порядка нужно пересчитать очки для всех игроков, прошедших этот уровень
+                // Это будет сделано через общий слушатель, но для надёжности вызовем пересчёт
+                recalculatePlayerScoresForLevel(levelKey, type);
             });
             draggedIndex = -1;
         }
@@ -1563,7 +1561,8 @@
             updates[`/${type}s/${items[index].key}/order`] = target;
             updates[`/${type}s/${items[target].key}/order`] = index;
             db.ref().update(updates).then(() => {
-                // можно вызвать logChange, но для простоты пока не логируем
+                // Пересчёт после перемещения
+                recalculatePlayerScoresForLevel(levelKey, type);
             });
         }
 
@@ -1586,6 +1585,44 @@
                         const newItems = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                         logChange('remove', levelName, levelKey, oldPos, null, type, newItems);
                     });
+                }
+            });
+        }
+
+        // ================== Пересчёт очков игроков для конкретного уровня ==================
+        function recalculatePlayerScoresForLevel(levelKey, type) {
+            const weight = getLevelWeight(levelKey, type);
+            playersRef.once('value', snapshot => {
+                const updates = {};
+                snapshot.forEach(child => {
+                    const nickname = child.key;
+                    const player = child.val() || { records: {}, score: 0, hardest: null };
+                    if (player.records && player.records[levelKey]) {
+                        // Пересчитываем счёт
+                        let newScore = 0;
+                        let hardestKey = null;
+                        let hardestWeight = 0;
+                        for (let lk in player.records) {
+                            const recType = player.records[lk].type;
+                            const w = getLevelWeight(lk, recType);
+                            newScore += w;
+                            if (w > hardestWeight) {
+                                hardestWeight = w;
+                                hardestKey = lk;
+                            }
+                        }
+                        player.score = newScore;
+                        if (hardestKey) {
+                            const hardestLevel = (type === 'demon' ? demons : challenges).find(l => l.key === hardestKey);
+                            player.hardest = { levelKey: hardestKey, levelName: hardestLevel?.name || 'Неизвестно', type: player.records[hardestKey].type };
+                        } else {
+                            player.hardest = null;
+                        }
+                        updates[`players/${nickname}`] = player;
+                    }
+                });
+                if (Object.keys(updates).length > 0) {
+                    db.ref().update(updates);
                 }
             });
         }
@@ -1756,6 +1793,15 @@
                     document.getElementById('detailModal').style.display = 'none';
                 });
             }
+        }
+
+        // ================== Функция для получения веса уровня ==================
+        function getLevelWeight(levelKey, type) {
+            const items = type === 'demon' ? demons : challenges;
+            const item = items.find(i => i.key === levelKey);
+            if (!item) return 0;
+            const weight = parseFloat(item.score);
+            return isNaN(weight) ? 0 : weight;
         }
 
         // ================== Админка ==================
@@ -2037,13 +2083,14 @@
                 if (positionInput && !isNaN(parseInt(positionInput))) {
                     newOrder = Math.max(0, parseInt(positionInput) - 1);
                 } else {
-                    newOrder = null; // не менять позицию
+                    newOrder = null;
                 }
 
                 const items = type === 'demon' ? demons : challenges;
                 const oldItem = items.find(i => i.key === key);
                 if (!oldItem) return;
                 const oldOrder = oldItem.order;
+                const oldScore = oldItem.score;
 
                 // Если позиция не указана или не меняется
                 if (newOrder === null || newOrder === oldOrder) {
@@ -2063,6 +2110,10 @@
                     // order не меняем
                     db.ref().update(updates).then(() => {
                         alert('Уровень обновлён');
+                        // Если изменился счёт, пересчитываем очки
+                        if (score !== oldScore) {
+                            recalculatePlayerScoresForLevel(key, type);
+                        }
                         closeAdmin();
                     }).catch(err => alert('Ошибка: ' + err.message));
                     return;
@@ -2102,6 +2153,8 @@
                             logChange('move', name, key, oldOrder+1, newOrder+1, type, newList);
                         });
                     }, 500);
+                    // Пересчёт очков
+                    recalculatePlayerScoresForLevel(key, type);
                     closeAdmin();
                 }).catch(err => alert('Ошибка: ' + err.message));
             }
@@ -2140,14 +2193,6 @@
                 });
                 if (!hasPending) container.innerHTML = `<p style="text-align:center; color:#888;">${t.noPending}</p>`;
             });
-        }
-
-        function getLevelWeight(levelKey, type) {
-            const items = type === 'demon' ? demons : challenges;
-            const item = items.find(i => i.key === levelKey);
-            if (!item) return 0;
-            const weight = parseFloat(item.score);
-            return isNaN(weight) ? 0 : weight;
         }
 
         function approveRecord(recordKey, levelKey, nickname, percent, type, levelName) {
