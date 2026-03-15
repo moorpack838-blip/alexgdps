@@ -112,7 +112,6 @@
         .section-page.active { display: block; }
         @keyframes fadeInPage { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
 
-        /* Старый дизайн главной */
         .welcome-hero { min-height: calc(100vh - 80px); display: flex; flex-direction: column; justify-content: center; align-items: center; text-align: center; padding: 0 20px; }
         .welcome-hero h1 { font-family: 'Montserrat'; font-size: clamp(3rem, 8vw, 6rem); margin: 0; line-height: 1.1; text-transform: uppercase; letter-spacing: 5px; text-shadow: 0 10px 30px rgba(102, 252, 241, 0.3); }
         .welcome-hero p { font-size: 1.15rem; color: var(--text-main); max-width: 700px; margin: 25px 0 40px; line-height: 1.7; }
@@ -129,55 +128,6 @@
         .home-video-title { font-family: 'Montserrat'; font-size: clamp(1.4rem, 3vw, 2rem); font-weight: 900; margin: 0 0 30px; color: #fff; text-transform: uppercase; letter-spacing: 2px; }
         .home-video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 1px solid rgba(102, 252, 241, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(102, 252, 241, 0.08); }
         .home-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
-
-        /* Блок последних изменений на главной */
-        .home-recent {
-            max-width: 800px;
-            margin: 60px auto;
-            padding: 0 20px;
-        }
-        .home-recent h2 {
-            font-family: 'Montserrat', sans-serif;
-            font-size: 2rem;
-            margin-bottom: 30px;
-            text-align: center;
-            color: #fff;
-        }
-        .home-recent-list {
-            background: var(--card-bg);
-            border-radius: 20px;
-            padding: 20px;
-            border: 1px solid rgba(102,252,241,0.2);
-        }
-        .recent-item {
-            margin-bottom: 20px;
-            padding-bottom: 15px;
-            border-bottom: 1px solid rgba(255,255,255,0.05);
-        }
-        .recent-item:last-child {
-            border-bottom: none;
-            margin-bottom: 0;
-            padding-bottom: 0;
-        }
-        .recent-date {
-            color: var(--accent-cyan);
-            font-weight: 700;
-            font-size: 0.9rem;
-            margin-bottom: 5px;
-        }
-        .recent-text {
-            color: #ddd;
-            font-size: 1rem;
-            line-height: 1.5;
-        }
-        .recent-text .clickable-level {
-            color: var(--accent-cyan);
-            text-decoration: underline;
-            cursor: pointer;
-        }
-        .recent-text .clickable-level:hover {
-            color: #fff;
-        }
 
         .download-container { max-width: 800px; margin: 40px auto; text-align: center; background: var(--card-bg); padding: 50px 30px; border-radius: 25px; border: 1px solid rgba(102, 252, 241, 0.15); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .dl-title { font-family: 'Montserrat'; font-size: 3rem; margin-bottom: 10px; color: #fff; }
@@ -628,6 +578,57 @@
             color: #fff;
         }
 
+        .changes-container {
+            max-width: 1000px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .changes-list {
+            list-style: none;
+            padding: 0;
+        }
+        .changes-item {
+            background: var(--card-bg);
+            border-radius: 15px;
+            padding: 20px;
+            margin-bottom: 15px;
+            border: 1px solid rgba(102,252,241,0.2);
+            display: flex;
+            align-items: flex-start;
+            gap: 15px;
+        }
+        .changes-icon {
+            font-size: 2rem;
+            min-width: 50px;
+            text-align: center;
+        }
+        .changes-icon .fa-plus-circle { color: #2ecc71; }
+        .changes-icon .fa-minus-circle { color: #e74c3c; }
+        .changes-icon .fa-arrows-up-down { color: #3498db; }
+        .changes-content {
+            flex: 1;
+        }
+        .changes-date {
+            color: #888;
+            font-size: 0.85rem;
+            margin-bottom: 5px;
+        }
+        .changes-text {
+            font-size: 1rem;
+            line-height: 1.5;
+        }
+        .changes-text .level-name {
+            color: var(--accent-cyan);
+            font-weight: 700;
+        }
+        .changes-text .position {
+            color: #fff;
+            font-weight: 700;
+        }
+        .changes-text .neighbor {
+            color: #aaa;
+        }
+
         @media (max-width: 768px) {
             .navbar { padding: 0 14px; height: 60px; flex-wrap: nowrap; }
             .logo { font-size: 1.2rem; }
@@ -669,6 +670,7 @@
             .records-grid { grid-template-columns: 1fr; }
             .detail-stats { grid-template-columns: 1fr; }
             .player-stats { flex-direction: column; gap: 20px; }
+            .changes-item { flex-direction: column; gap: 10px; }
         }
 
         @media (max-width: 400px) {
@@ -703,6 +705,7 @@
             </div>
             <button class="nav-item" onclick="openSection('recordsSection')" id="navRecords">Рекорды</button>
             <button class="nav-item" onclick="openSection('rankingsSection')" id="navRankings">Топ игроков</button>
+            <button class="nav-item" onclick="openSection('changesSection')" id="navChanges">Изменения</button>
             <button class="btn-download-nav" onclick="openSection('downloadSection')">
                 <i class="fas fa-download"></i> <span id="navDownloadText">Скачать</span>
             </button>
@@ -741,6 +744,9 @@
         <button class="m-btn" onclick="openSection('rankingsSection'); closeBurger();">
             <i class="fas fa-chart-line"></i> Топ игроков
         </button>
+        <button class="m-btn" onclick="openSection('changesSection'); closeBurger();">
+            <i class="fas fa-history"></i> Изменения
+        </button>
         <button class="m-btn green" onclick="openSection('downloadSection'); closeBurger();">
             <i class="fas fa-download"></i> Скачать игру
         </button>
@@ -772,12 +778,6 @@
                 <iframe src="https://www.youtube.com/embed/E6MWW70jUso" title="Alex GDPS 2025 AWARDS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
         </section>
-
-        <!-- Блок последних изменений -->
-        <div class="home-recent">
-            <h2 id="homeRecentTitle">Последние изменения</h2>
-            <div id="homeRecentList" class="home-recent-list"></div>
-        </div>
     </main>
 
     <main id="downloadSection" class="section-page">
@@ -859,6 +859,19 @@
                     <!-- будут заполняться динамически -->
                 </tbody>
             </table>
+        </div>
+    </main>
+
+    <!-- Вкладка изменений -->
+    <main id="changesSection" class="section-page">
+        <div class="hero-title">
+            <h2 id="changesTitle">ПОСЛЕДНИЕ ИЗМЕНЕНИЯ</h2>
+            <div class="top-50-text">RECENT CHANGES</div>
+        </div>
+        <div class="changes-container">
+            <ul class="changes-list" id="changesList">
+                <!-- будут заполняться динамически -->
+            </ul>
         </div>
     </main>
 
@@ -1013,6 +1026,7 @@
                 navListsText: "Списки",
                 navRecords: "Рекорды",
                 navRankings: "Топ игроков",
+                navChanges: "Изменения",
                 navDownloadText: "Скачать",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Окунись в мир самого амбициозного приватного сервера Geometry Dash. Стабильность, уникальные уровни и сильнейшее комьюнити игроков.",
@@ -1036,6 +1050,7 @@
                 top50: "TOP 50",
                 recordsTitle: "РЕКОРДЫ ИГРОКОВ",
                 rankingsTitle: "ТОП ИГРОКОВ",
+                changesTitle: "ПОСЛЕДНИЕ ИЗМЕНЕНИЯ",
                 playerProfileTitle: "ПРОФИЛЬ ИГРОКА",
                 submitRecord: "ПОДАТЬ РЕКОРД",
                 recordModalTitle: "ПОДАТЬ РЕКОРД",
@@ -1100,15 +1115,14 @@
                 changeRemove: "removed from #{pos}",
                 changeMove: "#{oldPos} → #{newPos}",
                 above: "above {name}",
-                below: "below {name}",
-                homeRecentTitle: "Последние изменения",
-                noChanges: "Нет изменений"
+                below: "below {name}"
             },
             EN: {
                 navHome: "Home",
                 navListsText: "Lists",
                 navRecords: "Records",
                 navRankings: "Player Rankings",
+                navChanges: "Changes",
                 navDownloadText: "Download",
                 welcomeTitle: "ALEX GDPS",
                 welcomeDesc: "Dive into the world of the most ambitious Geometry Dash private server. Stability, unique levels, and the strongest community.",
@@ -1132,6 +1146,7 @@
                 top50: "TOP 50",
                 recordsTitle: "PLAYER RECORDS",
                 rankingsTitle: "PLAYER RANKINGS",
+                changesTitle: "RECENT CHANGES",
                 playerProfileTitle: "PLAYER PROFILE",
                 submitRecord: "SUBMIT RECORD",
                 recordModalTitle: "SUBMIT RECORD",
@@ -1196,9 +1211,7 @@
                 changeRemove: "removed from #{pos}",
                 changeMove: "#{oldPos} → #{newPos}",
                 above: "above {name}",
-                below: "below {name}",
-                homeRecentTitle: "Recent Changes",
-                noChanges: "No changes"
+                below: "below {name}"
             }
         };
 
@@ -1209,6 +1222,7 @@
             document.getElementById('navListsText').innerHTML = `${t.navListsText} <i class="fas fa-caret-down"></i>`;
             document.getElementById('navRecords').innerText = t.navRecords;
             document.getElementById('navRankings').innerText = t.navRankings;
+            document.getElementById('navChanges').innerText = t.navChanges;
             document.getElementById('navDownloadText').innerText = t.navDownloadText;
             document.getElementById('welcomeTitle').innerText = t.welcomeTitle;
             document.getElementById('welcomeDesc').innerText = t.welcomeDesc;
@@ -1227,7 +1241,7 @@
             document.getElementById('searchInput').placeholder = t.searchPlaceholder;
             document.getElementById('recordsTitle').innerText = t.recordsTitle;
             document.getElementById('rankingsTitle').innerText = t.rankingsTitle;
-            document.getElementById('homeRecentTitle').innerText = t.homeRecentTitle;
+            document.getElementById('changesTitle').innerText = t.changesTitle;
             document.querySelector('.submit-record-btn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.submitRecord}`;
             document.getElementById('recordModalTitle').innerText = t.recordModalTitle;
             document.getElementById('radioDemon').innerText = t.radioDemon;
@@ -1241,6 +1255,7 @@
             document.getElementById('submitRecordBtn').innerText = t.submitRecordBtn;
             render();
             loadRankings();
+            loadChanges();
         }
 
         // ================== Инициализация состояния админа ==================
@@ -1285,8 +1300,8 @@
                 loadRecords();
             } else if (id === 'rankingsSection') {
                 loadRankings();
-            } else if (id === 'homeSection') {
-                loadRecentChanges();
+            } else if (id === 'changesSection') {
+                loadChanges();
             }
         }
 
@@ -1577,52 +1592,49 @@
             changesRef.push(change);
         }
 
-        // ================== Функция для форматирования текста изменений ==================
-        function formatChangeText(change) {
-            const t = translations[currentLang];
-            let text = '';
-            const levelSpan = `<span class="clickable-level" onclick="showInfoByKey('${change.levelKey}', '${change.listType}')">${escapeHtml(change.levelName)}</span>`;
-
-            if (change.action === 'place') {
-                text = `${levelSpan} ${t.changePlace.replace('{pos}', change.newPos)}`;
-                if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
-                if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
-            } else if (change.action === 'remove') {
-                text = `${levelSpan} ${t.changeRemove.replace('{pos}', change.oldPos)}`;
-            } else if (change.action === 'move') {
-                text = `${levelSpan} ${t.changeMove.replace('{oldPos}', change.oldPos).replace('{newPos}', change.newPos)}`;
-                if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
-                if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
-            }
-            return text;
-        }
-
-        // ================== Загрузка последних изменений для главной ==================
-        function loadRecentChanges() {
-            changesRef.orderByChild('timestamp').limitToLast(5).once('value', snapshot => {
+        // ================== Загрузка изменений ==================
+        function loadChanges() {
+            changesRef.orderByChild('timestamp').limitToLast(100).once('value', snapshot => {
                 const changes = [];
                 snapshot.forEach(child => {
                     changes.push({ key: child.key, ...child.val() });
                 });
                 changes.sort((a, b) => b.timestamp - a.timestamp);
 
-                const container = document.getElementById('homeRecentList');
-                if (!container) return;
+                const container = document.getElementById('changesList');
                 const t = translations[currentLang];
                 container.innerHTML = '';
                 changes.forEach(change => {
                     const date = new Date(change.timestamp).toLocaleDateString('ru-RU', { year: 'numeric', month: 'long', day: 'numeric' });
-                    const text = formatChangeText(change);
-                    const item = document.createElement('div');
-                    item.className = 'recent-item';
+                    let icon, text;
+                    const levelSpan = `<span class="clickable-level" onclick="showInfoByKey('${change.levelKey}', '${change.listType}')">${escapeHtml(change.levelName)}</span>`;
+                    if (change.action === 'place') {
+                        icon = 'fa-plus-circle';
+                        text = `${levelSpan} ${t.changePlace.replace('{pos}', change.newPos)}`;
+                        if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
+                        if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
+                    } else if (change.action === 'remove') {
+                        icon = 'fa-minus-circle';
+                        text = `${levelSpan} ${t.changeRemove.replace('{pos}', change.oldPos)}`;
+                    } else if (change.action === 'move') {
+                        icon = 'fa-arrows-up-down';
+                        text = `${levelSpan} ${t.changeMove.replace('{oldPos}', change.oldPos).replace('{newPos}', change.newPos)}`;
+                        if (change.above) text += `, ${t.above.replace('{name}', change.above)}`;
+                        if (change.below) text += `, ${t.below.replace('{name}', change.below)}`;
+                    }
+                    const item = document.createElement('li');
+                    item.className = 'changes-item';
                     item.innerHTML = `
-                        <div class="recent-date">${date}</div>
-                        <div class="recent-text">${text}</div>
+                        <div class="changes-icon"><i class="fas ${icon}"></i></div>
+                        <div class="changes-content">
+                            <div class="changes-date">${date}</div>
+                            <div class="changes-text">${text}</div>
+                        </div>
                     `;
                     container.appendChild(item);
                 });
                 if (changes.length === 0) {
-                    container.innerHTML = `<p style="color:#888; text-align:center;">${t.noChanges}</p>`;
+                    container.innerHTML = '<p style="text-align:center;">Нет изменений</p>';
                 }
             });
         }
@@ -2206,7 +2218,6 @@
             document.getElementById('langBtn').innerText = currentLang;
             applyTranslations();
             toggleAdmFields();
-            loadRecentChanges(); // обновить изменения на главной при смене языка
         }
 
         db.ref('maintenance').on('value', s => {
@@ -2223,7 +2234,6 @@
 
         window.addEventListener('load', () => {
             applyTranslations();
-            loadRecentChanges();
         });
     </script>
 
