@@ -13,6 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
+        /* Все стили без изменений — они уже в предыдущей версии */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -1489,6 +1490,13 @@
             });
         }
 
+        // ================== Вспомогательная функция для получения позиции уровня ==================
+        function getLevelPosition(levelKey, type) {
+            const items = type === 'demon' ? demons : challenges;
+            const index = items.findIndex(i => i.key === levelKey);
+            return index === -1 ? Infinity : index + 1;
+        }
+
         // ================== Drag & Drop ==================
         let draggedIndex = -1;
         function handleDragStart(e, index, type) {
@@ -1534,6 +1542,7 @@
             db.ref().update(updates).then(() => {
                 showToast('Порядок обновлён!');
                 logChange('move', levelName, levelKey, oldPos, newPos, type, newItems);
+                // Пересчёт очков и hardest для затронутых игроков
                 recalculatePlayerScoresForLevel(levelKey, type);
             });
             draggedIndex = -1;
@@ -1600,19 +1609,20 @@
                         // Пересчитываем счёт
                         let newScore = 0;
                         let hardestDemonKey = null, hardestChallengeKey = null;
-                        let hardestDemonWeight = 0, hardestChallengeWeight = 0;
+                        let hardestDemonPos = Infinity, hardestChallengePos = Infinity;
                         for (let lk in player.records) {
                             const recType = player.records[lk].type;
                             const w = getLevelWeight(lk, recType);
                             newScore += w;
+                            const pos = getLevelPosition(lk, recType);
                             if (recType === 'demon') {
-                                if (w > hardestDemonWeight) {
-                                    hardestDemonWeight = w;
+                                if (pos < hardestDemonPos) {
+                                    hardestDemonPos = pos;
                                     hardestDemonKey = lk;
                                 }
                             } else if (recType === 'challenge') {
-                                if (w > hardestChallengeWeight) {
-                                    hardestChallengeWeight = w;
+                                if (pos < hardestChallengePos) {
+                                    hardestChallengePos = pos;
                                     hardestChallengeKey = lk;
                                 }
                             }
@@ -1807,7 +1817,7 @@
             }
         }
 
-        // ================== Функция для получения веса уровня ==================
+        // ================== Функция для получения веса уровня (очков) ==================
         function getLevelWeight(levelKey, type) {
             const items = type === 'demon' ? demons : challenges;
             const item = items.find(i => i.key === levelKey);
@@ -2237,15 +2247,17 @@
                             player.records[levelKey] = newRecord;
                             player.score = (player.score || 0) + weight;
                             
-                            // Обновляем hardestDemon / hardestChallenge
+                            // Обновляем hardestDemon / hardestChallenge по позиции
                             if (type === 'demon') {
-                                let hardestDemonWeight = getLevelWeight(player.hardestDemon?.levelKey, 'demon');
-                                if (weight > hardestDemonWeight) {
+                                let hardestDemonPos = getLevelPosition(player.hardestDemon?.levelKey, 'demon');
+                                const newPos = getLevelPosition(levelKey, 'demon');
+                                if (newPos < hardestDemonPos) {
                                     player.hardestDemon = { levelKey, levelName };
                                 }
                             } else if (type === 'challenge') {
-                                let hardestChallengeWeight = getLevelWeight(player.hardestChallenge?.levelKey, 'challenge');
-                                if (weight > hardestChallengeWeight) {
+                                let hardestChallengePos = getLevelPosition(player.hardestChallenge?.levelKey, 'challenge');
+                                const newPos = getLevelPosition(levelKey, 'challenge');
+                                if (newPos < hardestChallengePos) {
                                     player.hardestChallenge = { levelKey, levelName };
                                 }
                             }
