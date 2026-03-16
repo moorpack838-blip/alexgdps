@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили без изменений — они уже в предыдущей версии */
+        /* Все стили из предыдущей версии + новые для голосования */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -130,6 +130,101 @@
         .home-video-wrapper { position: relative; width: 100%; aspect-ratio: 16/9; border-radius: 20px; overflow: hidden; border: 1px solid rgba(102, 252, 241, 0.2); box-shadow: 0 20px 60px rgba(0,0,0,0.6), 0 0 40px rgba(102, 252, 241, 0.08); }
         .home-video-wrapper iframe { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
 
+        /* Стили для голосования */
+        .vote-section {
+            max-width: 1000px;
+            margin: 60px auto;
+            padding: 0 20px;
+        }
+        .vote-section h2 {
+            font-family: 'Montserrat', sans-serif;
+            font-size: 2rem;
+            margin-bottom: 30px;
+            text-align: center;
+            color: #fff;
+        }
+        .vote-container {
+            background: var(--card-bg);
+            border-radius: 20px;
+            padding: 20px;
+            border: 1px solid rgba(102,252,241,0.2);
+        }
+        .vote-levels {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+        .vote-card {
+            background: rgba(255,255,255,0.03);
+            border-radius: 15px;
+            padding: 15px;
+            border: 1px solid rgba(102,252,241,0.1);
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+        .vote-card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .vote-card-title {
+            font-weight: 700;
+            color: #fff;
+            cursor: pointer;
+            text-decoration: underline;
+            text-decoration-color: var(--accent-cyan);
+        }
+        .vote-card-title:hover {
+            color: var(--accent-cyan);
+        }
+        .vote-card-type {
+            font-size: 0.8rem;
+            background: rgba(102,252,241,0.1);
+            padding: 4px 8px;
+            border-radius: 20px;
+            color: var(--accent-cyan);
+        }
+        .vote-stats {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: 10px;
+        }
+        .vote-count {
+            font-size: 1.2rem;
+            font-weight: 700;
+            color: #fff;
+        }
+        .vote-button {
+            background: var(--accent-cyan);
+            color: #0b0c10;
+            border: none;
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-weight: 700;
+            cursor: pointer;
+            transition: 0.3s;
+        }
+        .vote-button:hover {
+            transform: scale(1.05);
+            box-shadow: 0 0 15px var(--accent-cyan);
+        }
+        .vote-button:disabled {
+            background: #555;
+            color: #aaa;
+            cursor: not-allowed;
+            transform: none;
+            box-shadow: none;
+        }
+        .vote-total {
+            text-align: center;
+            margin-top: 20px;
+            color: #888;
+            font-size: 0.9rem;
+        }
+
         .download-container { max-width: 800px; margin: 40px auto; text-align: center; background: var(--card-bg); padding: 50px 30px; border-radius: 25px; border: 1px solid rgba(102, 252, 241, 0.15); backdrop-filter: blur(15px); box-shadow: 0 20px 50px rgba(0,0,0,0.5); }
         .dl-title { font-family: 'Montserrat'; font-size: 3rem; margin-bottom: 10px; color: #fff; }
         .dl-version { display: inline-block; background: rgba(102, 252, 241, 0.1); color: var(--accent-cyan); padding: 8px 20px; border-radius: 20px; font-weight: 700; font-size: 1.1rem; margin-bottom: 40px; border: 1px solid rgba(102, 252, 241, 0.3); }
@@ -243,6 +338,43 @@
         .admin-form h2 { margin-top: 0; font-size: 1.5rem; color: white; text-align: center; font-family: Montserrat; }
         .admin-form input, .admin-form select { width: 100%; padding: 14px; margin: 10px 0; background: #1a1e29; border: 1px solid #333; color: white; border-radius: 12px; font-size: 0.95rem; outline: none; transition: 0.3s; }
         .admin-form input:focus, .admin-form select:focus { border-color: var(--accent-cyan); }
+
+        /* Стили для красивого списка управления голосованиями */
+        .vote-management-list {
+            background: rgba(255,255,255,0.02);
+            border-radius: 12px;
+            padding: 10px;
+            border: 1px solid rgba(102,252,241,0.15);
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+            max-height: 200px;
+            overflow-y: auto;
+        }
+        .vote-item {
+            background: rgba(255,255,255,0.03);
+            border-radius: 8px;
+            border: 1px solid rgba(255,255,255,0.05);
+            transition: 0.2s;
+        }
+        .vote-item:hover {
+            background: rgba(102,252,241,0.1);
+            border-color: var(--accent-cyan);
+        }
+        .vote-item label {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 8px 12px;
+            cursor: pointer;
+            color: #fff;
+            width: 100%;
+        }
+        .vote-item input[type="checkbox"] {
+            width: 18px;
+            height: 18px;
+            accent-color: var(--accent-cyan);
+        }
 
         .drag-indicator {
             position: fixed;
@@ -779,6 +911,17 @@
                 <iframe src="https://www.youtube.com/embed/E6MWW70jUso" title="Alex GDPS 2025 AWARDS" frameborder="0" allow="accelerometer; autoplay; clipboard-write; encrypted-media; gyroscope; picture-in-picture; web-share" allowfullscreen></iframe>
             </div>
         </section>
+
+        <!-- Блок голосования -->
+        <div class="vote-section">
+            <h2 id="voteTitle">Голосование за сложность</h2>
+            <div class="vote-container">
+                <div id="voteLevels" class="vote-levels">
+                    <!-- будут загружаться уровни для голосования -->
+                </div>
+                <div id="voteTotal" class="vote-total"></div>
+            </div>
+        </div>
     </main>
 
     <main id="downloadSection" class="section-page">
@@ -923,6 +1066,7 @@
                 <option value="drag_drop">🖱️ Drag & Drop режим</option>
                 <option value="moderate_records">🛡️ Модерация рекордов</option>
                 <option value="edit_level">✏️ Редактировать Демона/Челлендж</option>
+                <option value="manage_votes">🗳️ Управление голосованиями</option>
             </select>
             <div id="fields_main">
                 <input type="text" id="itemName" placeholder="Название">
@@ -970,6 +1114,32 @@
                 <input type="text" id="editVersion" placeholder="Версия (напр. 1.9)">
                 <input type="text" id="editScore" placeholder="Счёт (напр. 0.60)">
                 <input type="number" id="editPosition" placeholder="Позиция (1 - N) [необязательно]" min="1">
+            </div>
+
+            <!-- Блок управления голосованиями (улучшенный) -->
+            <div id="fields_votes" style="display:none;">
+                <h3 style="color:var(--accent-cyan); display: flex; align-items: center; gap: 8px;">
+                    <i class="fas fa-poll"></i> Управление голосованиями
+                </h3>
+                
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color:#fff; margin:10px 0 5px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-dragon"></i> Демоны
+                    </h4>
+                    <div id="voteDemonList" class="vote-management-list"></div>
+                </div>
+
+                <div style="margin-bottom: 20px;">
+                    <h4 style="color:#fff; margin:10px 0 5px; display: flex; align-items: center; gap: 8px;">
+                        <i class="fas fa-bolt"></i> Челленджи
+                    </h4>
+                    <div id="voteChallengeList" class="vote-management-list"></div>
+                </div>
+
+                <div style="display: flex; gap: 10px; margin-top: 20px;">
+                    <button class="btn-more" onclick="saveVoteSettings()" style="flex: 1;" id="saveVotesBtn">СОХРАНИТЬ</button>
+                    <button class="btn-more" onclick="stopAllVotes()" style="flex: 1; background: #e74c3c; color: white; border-color: #e74c3c;" id="stopVotesBtn">🛑 ОСТАНОВИТЬ ВСЕ ОПРОСЫ</button>
+                </div>
             </div>
 
             <div id="moderationContainer" class="moderation-container" style="display:none;"></div>
@@ -1041,6 +1211,17 @@
         const recordsRef = db.ref('recordRequests');
         const playersRef = db.ref('players');
         const changesRef = db.ref('changes');
+        const votesRef = db.ref('levelVotes'); // узел для голосов
+
+        // Для идентификации пользователя при голосовании (уникальный ID сессии)
+        function getSessionId() {
+            let sessionId = localStorage.getItem('voteSessionId');
+            if (!sessionId) {
+                sessionId = 'session_' + Math.random().toString(36).substr(2, 9);
+                localStorage.setItem('voteSessionId', sessionId);
+            }
+            return sessionId;
+        }
 
         // ================== Переводы ==================
         const translations = {
@@ -1116,6 +1297,7 @@
                 maintenance: "🔧 Техперерыв вкл/выкл",
                 dragDrop: "🖱️ Drag & Drop режим",
                 moderate: "🛡️ Модерация рекордов",
+                manageVotes: "🗳️ Управление голосованиями",
                 namePlaceholder: "Название",
                 authorPlaceholder: "Автор",
                 idPlaceholder: "ID Уровня",
@@ -1139,7 +1321,12 @@
                 changeRemove: "removed from #{pos}",
                 changeMove: "#{oldPos} → #{newPos}",
                 above: "above {name}",
-                below: "below {name}"
+                below: "below {name}",
+                voteTitle: "Голосование за сложность",
+                voteButton: "Голосовать",
+                voted: "Вы уже голосовали",
+                totalVotes: "Всего голосов: {count}",
+                stopAllVotes: "ОСТАНОВИТЬ ВСЕ ОПРОСЫ"
             },
             EN: {
                 navHome: "Home",
@@ -1213,6 +1400,7 @@
                 maintenance: "🔧 Toggle maintenance",
                 dragDrop: "🖱️ Drag & Drop mode",
                 moderate: "🛡️ Moderate records",
+                manageVotes: "🗳️ Manage votes",
                 namePlaceholder: "Name",
                 authorPlaceholder: "Author",
                 idPlaceholder: "Level ID",
@@ -1236,7 +1424,12 @@
                 changeRemove: "removed from #{pos}",
                 changeMove: "#{oldPos} → #{newPos}",
                 above: "above {name}",
-                below: "below {name}"
+                below: "below {name}",
+                voteTitle: "Difficulty Voting",
+                voteButton: "Vote",
+                voted: "You've voted",
+                totalVotes: "Total votes: {count}",
+                stopAllVotes: "STOP ALL VOTES"
             }
         };
 
@@ -1267,6 +1460,7 @@
             document.getElementById('recordsTitle').innerText = t.recordsTitle;
             document.getElementById('rankingsTitle').innerText = t.rankingsTitle;
             document.getElementById('changesTitle').innerText = t.changesTitle;
+            document.getElementById('voteTitle').innerText = t.voteTitle;
             document.querySelector('.submit-record-btn').innerHTML = `<i class="fas fa-plus-circle"></i> ${t.submitRecord}`;
             document.getElementById('recordModalTitle').innerText = t.recordModalTitle;
             document.getElementById('radioDemon').innerText = t.radioDemon;
@@ -1278,9 +1472,15 @@
             document.getElementById('recordWish').placeholder = t.recordWish;
             document.getElementById('recordPercent').placeholder = t.recordPercent;
             document.getElementById('submitRecordBtn').innerText = t.submitRecordBtn;
+            
+            // Кнопки управления голосованиями
+            document.getElementById('saveVotesBtn').innerText = t.manageVotes === "🗳️ Manage votes" ? "SAVE" : "СОХРАНИТЬ"; // fallback
+            document.getElementById('stopVotesBtn').innerHTML = `🛑 ${t.stopAllVotes}`;
+            
             render();
             loadRankings();
             loadChanges();
+            loadVoteLevels();
         }
 
         // ================== Инициализация состояния админа ==================
@@ -1325,6 +1525,8 @@
                 loadRankings();
             } else if (id === 'changesSection') {
                 loadChanges();
+            } else if (id === 'homeSection') {
+                loadVoteLevels();
             }
         }
 
@@ -1356,6 +1558,7 @@
             const val = s.val();
             demons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
             render();
+            loadVoteLevels(); // обновить голосование при изменении данных
         });
 
         db.ref('creators').on('value', s => {
@@ -1368,12 +1571,18 @@
             const val = s.val();
             challenges = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
             render();
+            loadVoteLevels();
         });
 
         playersRef.on('value', s => {
             players = s.val() || {};
             render();
             loadRankings();
+        });
+
+        votesRef.on('value', s => {
+            // при изменении голосов обновляем отображение
+            loadVoteLevels();
         });
 
         function setSearchMode(mode) {
@@ -1542,7 +1751,6 @@
             db.ref().update(updates).then(() => {
                 showToast('Порядок обновлён!');
                 logChange('move', levelName, levelKey, oldPos, newPos, type, newItems);
-                // Пересчёт очков и hardest для затронутых игроков
                 recalculatePlayerScoresForLevel(levelKey, type);
             });
             draggedIndex = -1;
@@ -1606,7 +1814,6 @@
                     const nickname = child.key;
                     const player = child.val() || { records: {}, score: 0, hardestDemon: null, hardestChallenge: null };
                     if (player.records && player.records[levelKey]) {
-                        // Пересчитываем счёт
                         let newScore = 0;
                         let hardestDemonKey = null, hardestChallengeKey = null;
                         let hardestDemonPos = Infinity, hardestChallengePos = Infinity;
@@ -1858,6 +2065,7 @@
             document.getElementById('adminPanel').style.display = 'none';
             document.getElementById('fields_main').style.display = 'block';
             document.getElementById('fields_edit').style.display = 'none';
+            document.getElementById('fields_votes').style.display = 'none';
             document.getElementById('moderationContainer').style.display = 'none';
         }
 
@@ -1871,6 +2079,7 @@
             const a = document.getElementById('admAction').value;
             // Скрыть все блоки
             document.getElementById('fields_edit').style.display = 'none';
+            document.getElementById('fields_votes').style.display = 'none';
             document.getElementById('moderationContainer').style.display = 'none';
             document.getElementById('fields_main').style.display = 'none';
             document.getElementById('fields_victor').style.display = 'none';
@@ -1885,6 +2094,9 @@
             } else if (a === 'edit_level') {
                 document.getElementById('fields_edit').style.display = 'block';
                 populateEditLevelSelect();
+            } else if (a === 'manage_votes') {
+                document.getElementById('fields_votes').style.display = 'block';
+                populateVoteManagement();
             }
 
             // Обновляем плейсхолдеры
@@ -2114,7 +2326,6 @@
                 const oldOrder = oldItem.order;
                 const oldScore = oldItem.score;
 
-                // Если позиция не указана или не меняется
                 if (newOrder === null || newOrder === oldOrder) {
                     const updates = {};
                     updates[`/${type}s/${key}/name`] = name || oldItem.name;
@@ -2129,10 +2340,8 @@
                     updates[`/${type}s/${key}/objects`] = objects || oldItem.objects;
                     updates[`/${type}s/${key}/version`] = version || oldItem.version;
                     updates[`/${type}s/${key}/score`] = score || oldItem.score;
-                    // order не меняем
                     db.ref().update(updates).then(() => {
                         alert('Уровень обновлён');
-                        // Если изменился счёт, пересчитываем очки
                         if (score !== oldScore) {
                             recalculatePlayerScoresForLevel(key, type);
                         }
@@ -2141,7 +2350,6 @@
                     return;
                 }
 
-                // Иначе нужно переставить
                 let newItems = [...items];
                 const itemIndex = newItems.findIndex(i => i.key === key);
                 if (itemIndex === -1) return;
@@ -2175,11 +2383,177 @@
                             logChange('move', name, key, oldOrder+1, newOrder+1, type, newList);
                         });
                     }, 500);
-                    // Пересчёт очков
                     recalculatePlayerScoresForLevel(key, type);
                     closeAdmin();
                 }).catch(err => alert('Ошибка: ' + err.message));
             }
+        }
+
+        // ================== Управление голосованиями ==================
+        function populateVoteManagement() {
+            const demonDiv = document.getElementById('voteDemonList');
+            const challengeDiv = document.getElementById('voteChallengeList');
+            demonDiv.innerHTML = '';
+            challengeDiv.innerHTML = '';
+
+            demons.forEach(d => {
+                const div = document.createElement('div');
+                div.className = 'vote-item';
+                div.innerHTML = `
+                    <label>
+                        <input type="checkbox" class="vote-demon-check" data-key="${d.key}" ${d.votingEnabled ? 'checked' : ''}> 
+                        ${escapeHtml(d.name)} by ${escapeHtml(d.author)}
+                    </label>
+                `;
+                demonDiv.appendChild(div);
+            });
+
+            challenges.forEach(c => {
+                const div = document.createElement('div');
+                div.className = 'vote-item';
+                div.innerHTML = `
+                    <label>
+                        <input type="checkbox" class="vote-challenge-check" data-key="${c.key}" ${c.votingEnabled ? 'checked' : ''}> 
+                        ${escapeHtml(c.name)} by ${escapeHtml(c.author)}
+                    </label>
+                `;
+                challengeDiv.appendChild(div);
+            });
+        }
+
+        function saveVoteSettings() {
+            const demonChecks = document.querySelectorAll('.vote-demon-check');
+            const challengeChecks = document.querySelectorAll('.vote-challenge-check');
+            const updates = {};
+
+            demonChecks.forEach(cb => {
+                const key = cb.dataset.key;
+                updates[`demons/${key}/votingEnabled`] = cb.checked;
+            });
+            challengeChecks.forEach(cb => {
+                const key = cb.dataset.key;
+                updates[`challenges/${key}/votingEnabled`] = cb.checked;
+            });
+
+            db.ref().update(updates).then(() => {
+                alert('Настройки голосования сохранены');
+                loadVoteLevels();
+            }).catch(err => alert('Ошибка: ' + err.message));
+        }
+
+        // Остановить все опросы (votingEnabled = false для всех уровней)
+        function stopAllVotes() {
+            if (!confirm('Вы уверены, что хотите остановить все активные опросы? Блок голосования исчезнет с главной страницы.')) return;
+
+            const updates = {};
+
+            demons.forEach(d => {
+                if (d.key) {
+                    updates[`demons/${d.key}/votingEnabled`] = false;
+                }
+            });
+            challenges.forEach(c => {
+                if (c.key) {
+                    updates[`challenges/${c.key}/votingEnabled`] = false;
+                }
+            });
+
+            db.ref().update(updates)
+                .then(() => {
+                    alert('Все опросы остановлены.');
+                    loadVoteLevels(); // обновить главную
+                    populateVoteManagement(); // обновить чекбоксы в админке
+                })
+                .catch(err => alert('Ошибка: ' + err.message));
+        }
+
+        // Загрузка уровней для отображения голосования на главной
+        function loadVoteLevels() {
+            const container = document.getElementById('voteLevels');
+            if (!container) return;
+            const t = translations[currentLang];
+            const sessionId = getSessionId();
+
+            // Собираем все уровни, у которых votingEnabled = true
+            const voteItems = [];
+            demons.forEach(d => {
+                if (d.votingEnabled) {
+                    voteItems.push({ ...d, type: 'demon' });
+                }
+            });
+            challenges.forEach(c => {
+                if (c.votingEnabled) {
+                    voteItems.push({ ...c, type: 'challenge' });
+                }
+            });
+
+            if (voteItems.length === 0) {
+                container.innerHTML = `<p style="text-align:center; color:#888;">Нет уровней для голосования</p>`;
+                document.getElementById('voteTotal').innerHTML = '';
+                return;
+            }
+
+            // Загружаем текущие голоса для каждого уровня
+            votesRef.once('value', voteSnap => {
+                const allVotes = voteSnap.val() || {};
+                let totalVotes = 0;
+
+                voteItems.forEach(item => {
+                    const voteData = allVotes[item.key] || { count: 0, voters: {} };
+                    const count = voteData.count || 0;
+                    totalVotes += count;
+                    // Проверяем, голосовал ли текущий пользователь
+                    const hasVoted = voteData.voters && voteData.voters[sessionId] === true;
+                });
+
+                // Строим HTML
+                let html = '';
+                voteItems.forEach(item => {
+                    const voteData = allVotes[item.key] || { count: 0, voters: {} };
+                    const count = voteData.count || 0;
+                    const hasVoted = voteData.voters && voteData.voters[sessionId] === true;
+
+                    html += `
+                        <div class="vote-card">
+                            <div class="vote-card-header">
+                                <span class="vote-card-title" onclick="showInfoByKey('${item.key}', '${item.type}')">${escapeHtml(item.name)}</span>
+                                <span class="vote-card-type">${item.type === 'demon' ? 'Демон' : 'Челлендж'}</span>
+                            </div>
+                            <div class="vote-stats">
+                                <span class="vote-count">${count}</span>
+                                <button class="vote-button" onclick="castVote('${item.key}', '${item.type}')" ${hasVoted ? 'disabled' : ''}>${hasVoted ? t.voted : t.voteButton}</button>
+                            </div>
+                        </div>
+                    `;
+                });
+
+                container.innerHTML = html;
+                document.getElementById('voteTotal').innerHTML = t.totalVotes.replace('{count}', totalVotes);
+            });
+        }
+
+        // Голосование
+        function castVote(levelKey, type) {
+            const sessionId = getSessionId();
+            const voteRef = votesRef.child(levelKey);
+
+            voteRef.transaction(current => {
+                if (current === null) {
+                    return { count: 1, voters: { [sessionId]: true } };
+                }
+                if (current.voters && current.voters[sessionId]) {
+                    return; // уже голосовал
+                }
+                current.count = (current.count || 0) + 1;
+                current.voters = current.voters || {};
+                current.voters[sessionId] = true;
+                return current;
+            }).then(() => {
+                showToast('Голос учтён!');
+                loadVoteLevels(); // обновить интерфейс
+            }).catch(err => {
+                alert('Ошибка при голосовании: ' + err.message);
+            });
         }
 
         // ================== Модерация рекордов ==================
@@ -2247,7 +2621,6 @@
                             player.records[levelKey] = newRecord;
                             player.score = (player.score || 0) + weight;
                             
-                            // Обновляем hardestDemon / hardestChallenge по позиции
                             if (type === 'demon') {
                                 let hardestDemonPos = getLevelPosition(player.hardestDemon?.levelKey, 'demon');
                                 const newPos = getLevelPosition(levelKey, 'demon');
@@ -2506,47 +2879,6 @@
         window.addEventListener('load', () => {
             applyTranslations();
         });
-
-        // ================== ВРЕМЕННАЯ ФУНКЦИЯ ДЛЯ МИГРАЦИИ (закомментирована) ==================
-        /*
-        function migratePlayers() {
-            if (!confirm('Запустить миграцию данных игроков? Это действие необратимо.')) return;
-            
-            playersRef.once('value', snapshot => {
-                const updates = {};
-                let count = 0;
-                snapshot.forEach(child => {
-                    const nick = child.key;
-                    const player = child.val();
-                    if (player) {
-                        if (player.hardest && !player.hardestDemon && !player.hardestChallenge) {
-                            const oldHardest = player.hardest;
-                            const isDemon = demons.some(d => d.key === oldHardest.levelKey);
-                            const isChallenge = challenges.some(c => c.key === oldHardest.levelKey);
-                            
-                            if (isDemon) {
-                                player.hardestDemon = { levelKey: oldHardest.levelKey, levelName: oldHardest.levelName };
-                            } else if (isChallenge) {
-                                player.hardestChallenge = { levelKey: oldHardest.levelKey, levelName: oldHardest.levelName };
-                            }
-                            delete player.hardest;
-                            updates[`players/${nick}`] = player;
-                            count++;
-                        }
-                    }
-                });
-                if (count > 0) {
-                    db.ref().update(updates).then(() => {
-                        alert(`Обновлено ${count} игроков!`);
-                        loadRankings();
-                    });
-                } else {
-                    alert('Нет игроков для обновления.');
-                }
-            });
-        }
-        // Чтобы запустить, раскомментируйте и выполните migratePlayers() в консоли
-        */
     </script>
 
     <div id="maintenanceOverlay" style="display:none; position:fixed; top:0; left:0; width:100%; height:100%; z-index:9999; background:#0b0c10; flex-direction:column; justify-content:center; align-items:center; text-align:center; padding:20px;">
