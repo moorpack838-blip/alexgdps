@@ -13,7 +13,7 @@
     <script src="https://www.gstatic.com/firebasejs/9.22.0/firebase-functions-compat.js"></script>
 
     <style>
-        /* Все стили из предыдущей версии + новые для голосования и impossible */
+        /* Все стили из предыдущей версии + новые для голосования и impossible/future */
         :root {
             --bg: #0b0c10;
             --card-bg: rgba(31, 40, 51, 0.7);
@@ -317,6 +317,19 @@
         .card-img { width: 100%; height: 180px; object-fit: cover; border-bottom: 1px solid rgba(255,255,255,0.05); }
         .card-body { padding: 25px; }
         .demon-tag { position: absolute; top: 15px; left: 15px; background: var(--main-grad); color: #0b0c10; padding: 6px 12px; border-radius: 8px; font-weight: 900; font-size: 0.75rem; z-index: 50; box-shadow: 0 5px 15px rgba(0,0,0,0.5); text-transform: uppercase; }
+        .estimated-box {
+            background: rgba(102,252,241,0.08);
+            border: 1px solid rgba(102,252,241,0.2);
+            color: var(--accent-cyan);
+            padding: 6px 12px;
+            border-radius: 8px;
+            font-size: 0.75rem;
+            font-weight: 700;
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            margin-top: 8px;
+        }
         .wr-box {
             background: rgba(255,215,0,0.1);
             border: 1px solid rgba(255,215,0,0.3);
@@ -856,6 +869,7 @@
                     <a onclick="openSection('listSection'); switchTab('creators');">Creator Top</a>
                     <a onclick="openSection('listSection'); switchTab('challenges');">Челлендж лист</a>
                     <a onclick="openSection('listSection'); switchTab('impossible');">Impossible List</a>
+                    <a onclick="openSection('listSection'); switchTab('future');">Future Demonlist</a>
                 </div>
             </div>
             <button class="nav-item" onclick="openSection('recordsSection')" id="navRecords">Рекорды</button>
@@ -891,6 +905,7 @@
                 <button class="m-btn" onclick="openSection('listSection'); switchTab('creators'); closeBurger();" style="font-size:0.85rem;">Creator Top</button>
                 <button class="m-btn" onclick="openSection('listSection'); switchTab('challenges'); closeBurger();" style="font-size:0.85rem;">Челлендж лист</button>
                 <button class="m-btn" onclick="openSection('listSection'); switchTab('impossible'); closeBurger();" style="font-size:0.85rem;">Impossible List</button>
+                <button class="m-btn" onclick="openSection('listSection'); switchTab('future'); closeBurger();" style="font-size:0.85rem;">Future Demonlist</button>
             </div>
         </div>
 
@@ -978,6 +993,7 @@
             <h2 id="txtHero">DEMON LIST</h2>
             <div class="top-50-text" id="top50Banner">TOP 50</div>
             <div class="warning-text" id="impossibleWarning" style="display: none;">⚠️ УРОВНИ НЕ ВЕРИФНУТЫ ИЛИ НЕ ОЦЕНЕНЫ</div>
+            <div class="warning-text" id="futureWarning" style="display: none;">⚠️ УРОВНИ НЕ ЗАКОНЧЕНЫ ИЛИ НЕ ВЕРИФИЦИРОВАНЫ</div>
         </div>
         <div class="search-box">
             <div class="search-modes">
@@ -1082,10 +1098,11 @@
                 <option value="add_demon">Добавить Демона</option>
                 <option value="add_challenge">Добавить Челлендж</option>
                 <option value="add_impossible">Добавить Impossible уровень</option>
+                <option value="add_future">Добавить Future Demon</option>
                 <option value="add_creator">Добавить Креатора</option>
                 <option value="add_victor">Добавить Рекорд Демона</option>
                 <option value="add_challenge_victor">Добавить Рекорд Челленджа</option>
-                <option value="delete_mode">Удаление / Движение (Демоны/Челленджи/Impossible)</option>
+                <option value="delete_mode">Удаление / Движение (Демоны/Челленджи/Impossible/Future)</option>
                 <option value="delete_all_demons">🗑️ Удалить ВСЕХ демонов</option>
                 <option value="maintenance">🔧 Техперерыв вкл/выкл</option>
                 <option value="drag_drop">🖱️ Drag & Drop режим</option>
@@ -1102,7 +1119,8 @@
                     <input type="text" id="itemVerifier" placeholder="Верифер (необязательно для Impossible)">
                     <input type="text" id="itemImgURL" placeholder="Ссылка на картинку">
                     <input type="text" id="itemVid" placeholder="Ссылка на YouTube">
-                    <input type="text" id="itemWR" placeholder="WR (World Record) ссылка/текст">
+                    <input type="text" id="itemWR" placeholder="WR (World Record)">
+                    <input type="text" id="itemEstimatedPosition" placeholder="Примерное расположение в Global Demon List">
                     <input type="text" id="itemPassword" placeholder="Пароль (необязательно)">
                     <input type="text" id="itemLength" placeholder="Длина (напр. 0:50)">
                     <input type="text" id="itemObjects" placeholder="Объекты (напр. 20 251)">
@@ -1124,6 +1142,7 @@
                     <option value="demon">Демон</option>
                     <option value="challenge">Челлендж</option>
                     <option value="impossible">Impossible</option>
+                    <option value="future">Future</option>
                 </select>
                 <select id="editLevelSelect" style="width:100%; margin:10px 0;">
                     <option value="">Выберите уровень</option>
@@ -1136,6 +1155,7 @@
                 <input type="text" id="editImgURL" placeholder="Ссылка на картинку">
                 <input type="text" id="editVid" placeholder="Ссылка на YouTube">
                 <input type="text" id="editWR" placeholder="WR (World Record)">
+                <input type="text" id="editEstimatedPosition" placeholder="Примерное расположение в Global Demon List">
                 <input type="text" id="editPassword" placeholder="Пароль (необязательно)">
                 <input type="text" id="editLength" placeholder="Длина (напр. 0:50)">
                 <input type="text" id="editObjects" placeholder="Объекты (напр. 20 251)">
@@ -1238,6 +1258,7 @@
         let creators = [];
         let challenges = [];
         let impossibleLevels = [];
+        let futureDemons = [];
         let players = {};
 
         const recordsRef = db.ref('recordRequests');
@@ -1283,9 +1304,11 @@
                 demonList: "СПИСОК ДЕМОНОВ",
                 challengeList: "СПИСОК ЧЕЛЛЕНДЖЕЙ",
                 impossibleList: "IMPOSSIBLE LIST",
+                futureList: "FUTURE DEMONLIST",
                 creatorTop: "ТОП КРЕАТОРОВ",
                 top50: "TOP 50",
                 impossibleWarning: "⚠️ УРОВНИ НЕ ВЕРИФНУТЫ ИЛИ НЕ ОЦЕНЕНЫ",
+                futureWarning: "⚠️ УРОВНИ НЕ ЗАКОНЧЕНЫ ИЛИ НЕ ВЕРИФИЦИРОВАНЫ",
                 recordsTitle: "РЕКОРДЫ ИГРОКОВ",
                 rankingsTitle: "ТОП ИГРОКОВ",
                 changesTitle: "ПОСЛЕДНИЕ ИЗМЕНЕНИЯ",
@@ -1313,6 +1336,7 @@
                 score: "Счёт",
                 verified: "Верифицирован",
                 wr: "WR",
+                estimatedPosition: "Примерное расположение в Global Demon List",
                 victors: "Victors & Records:",
                 noRecords: "Рекордов пока нет",
                 statusPending: "⏳ На модерации",
@@ -1326,10 +1350,11 @@
                 addDemon: "Добавить Демона",
                 addChallenge: "Добавить Челлендж",
                 addImpossible: "Добавить Impossible уровень",
+                addFuture: "Добавить Future Demon",
                 addCreator: "Добавить Креатора",
                 addVictor: "Добавить Рекорд Демона",
                 addChallengeVictor: "Добавить Рекорд Челленджа",
-                deleteMode: "Удаление / Движение (Демоны/Челленджи/Impossible)",
+                deleteMode: "Удаление / Движение (Демоны/Челленджи/Impossible/Future)",
                 deleteAll: "🗑️ Удалить ВСЕХ демонов",
                 maintenance: "🔧 Техперерыв вкл/выкл",
                 dragDrop: "🖱️ Drag & Drop режим",
@@ -1344,6 +1369,7 @@
                 imgPlaceholder: "Ссылка на картинку",
                 vidPlaceholder: "Ссылка на YouTube",
                 wrPlaceholder: "WR (World Record)",
+                estimatedPositionPlaceholder: "Примерное расположение в Global Demon List",
                 passwordPlaceholder: "Пароль (необязательно)",
                 lengthPlaceholder: "Длина (напр. 0:50)",
                 objectsPlaceholder: "Объекты (напр. 20 251)",
@@ -1393,9 +1419,11 @@
                 demonList: "DEMON LIST",
                 challengeList: "CHALLENGE LIST",
                 impossibleList: "IMPOSSIBLE LIST",
+                futureList: "FUTURE DEMONLIST",
                 creatorTop: "CREATOR TOP",
                 top50: "TOP 50",
                 impossibleWarning: "⚠️ LEVELS NOT VERIFIED OR UNRATED",
+                futureWarning: "⚠️ LEVELS NOT FINISHED OR NOT VERIFIED",
                 recordsTitle: "PLAYER RECORDS",
                 rankingsTitle: "PLAYER RANKINGS",
                 changesTitle: "RECENT CHANGES",
@@ -1423,6 +1451,7 @@
                 score: "Score",
                 verified: "Verified by",
                 wr: "WR",
+                estimatedPosition: "Estimated position in Global Demon List",
                 victors: "Victors & Records:",
                 noRecords: "No records yet",
                 statusPending: "⏳ Pending",
@@ -1436,10 +1465,11 @@
                 addDemon: "Add Demon",
                 addChallenge: "Add Challenge",
                 addImpossible: "Add Impossible Level",
+                addFuture: "Add Future Demon",
                 addCreator: "Add Creator",
                 addVictor: "Add Demon Record",
                 addChallengeVictor: "Add Challenge Record",
-                deleteMode: "Delete / Move (Demons/Challenges/Impossible)",
+                deleteMode: "Delete / Move (Demons/Challenges/Impossible/Future)",
                 deleteAll: "🗑️ Delete ALL demons",
                 maintenance: "🔧 Toggle maintenance",
                 dragDrop: "🖱️ Drag & Drop mode",
@@ -1454,6 +1484,7 @@
                 imgPlaceholder: "Image URL",
                 vidPlaceholder: "YouTube URL",
                 wrPlaceholder: "WR (World Record)",
+                estimatedPositionPlaceholder: "Estimated position in Global Demon List",
                 passwordPlaceholder: "Password (optional)",
                 lengthPlaceholder: "Length (e.g. 0:50)",
                 objectsPlaceholder: "Objects (e.g. 20 251)",
@@ -1525,7 +1556,9 @@
             document.getElementById('stopVotesBtn').innerHTML = `🛑 ${t.stopAllVotes}`;
             
             // Обновляем заголовок текущей вкладки при смене языка
-            if (currentTab === 'impossible') {
+            if (currentTab === 'future') {
+                document.getElementById('txtHero').innerText = t.futureList;
+            } else if (currentTab === 'impossible') {
                 document.getElementById('txtHero').innerText = t.impossibleList;
             } else if (currentTab === 'demons') {
                 document.getElementById('txtHero').innerText = t.demonList;
@@ -1535,6 +1568,7 @@
                 document.getElementById('txtHero').innerText = t.creatorTop;
             }
             document.getElementById('impossibleWarning').innerText = t.impossibleWarning;
+            document.getElementById('futureWarning').innerText = t.futureWarning;
             
             render();
             loadRankings();
@@ -1637,7 +1671,12 @@
             const val = s.val();
             impossibleLevels = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
             render();
-            // Impossible уровни не участвуют в голосовании, поэтому loadVoteLevels не трогаем
+        });
+
+        db.ref('futureDemons').on('value', s => {
+            const val = s.val();
+            futureDemons = val ? Object.entries(val).map(([k, d]) => ({ key: k, ...d })).sort((a, b) => (a.order || 0) - (b.order || 0)) : [];
+            render();
         });
 
         playersRef.on('value', s => {
@@ -1679,6 +1718,7 @@
             const query = document.getElementById('searchInput').value.toLowerCase();
             const topBanner = document.getElementById('top50Banner');
             const impossibleWarning = document.getElementById('impossibleWarning');
+            const futureWarning = document.getElementById('futureWarning');
             const t = translations[currentLang];
             container.innerHTML = '';
 
@@ -1686,6 +1726,7 @@
                 document.getElementById('txtHero').innerText = t.demonList;
                 topBanner.style.display = 'block';
                 impossibleWarning.style.display = 'none';
+                futureWarning.style.display = 'none';
                 const filtered = demons.filter(d => {
                     if (searchMode === 'tag') return d.tag && d.tag.toLowerCase().includes(query);
                     return (d.name && d.name.toLowerCase().includes(query)) || (d.author && d.author.toLowerCase().includes(query));
@@ -1695,6 +1736,7 @@
                 document.getElementById('txtHero').innerText = t.challengeList;
                 topBanner.style.display = 'block';
                 impossibleWarning.style.display = 'none';
+                futureWarning.style.display = 'none';
                 const filtered = challenges.filter(c => {
                     if (searchMode === 'tag') return c.tag && c.tag.toLowerCase().includes(query);
                     return (c.name && c.name.toLowerCase().includes(query)) || (c.author && c.author.toLowerCase().includes(query));
@@ -1704,15 +1746,27 @@
                 document.getElementById('txtHero').innerText = t.impossibleList;
                 topBanner.style.display = 'block';
                 impossibleWarning.style.display = 'block';
+                futureWarning.style.display = 'none';
                 const filtered = impossibleLevels.filter(im => {
                     if (searchMode === 'tag') return im.tag && im.tag.toLowerCase().includes(query);
                     return (im.name && im.name.toLowerCase().includes(query)) || (im.author && im.author.toLowerCase().includes(query));
                 });
                 renderCards(filtered, 'impossible');
+            } else if (currentTab === 'future') {
+                document.getElementById('txtHero').innerText = t.futureList;
+                topBanner.style.display = 'block';
+                impossibleWarning.style.display = 'none';
+                futureWarning.style.display = 'block';
+                const filtered = futureDemons.filter(fd => {
+                    if (searchMode === 'tag') return fd.tag && fd.tag.toLowerCase().includes(query);
+                    return (fd.name && fd.name.toLowerCase().includes(query)) || (fd.author && fd.author.toLowerCase().includes(query));
+                });
+                renderCards(filtered, 'future');
             } else if (currentTab === 'creators') {
                 document.getElementById('txtHero').innerText = t.creatorTop;
                 topBanner.style.display = 'none';
                 impossibleWarning.style.display = 'none';
+                futureWarning.style.display = 'none';
                 const filtered = creators.filter(c => c.name && c.name.toLowerCase().includes(query));
                 filtered.forEach((c, i) => {
                     container.innerHTML += `<div class="card">
@@ -1754,15 +1808,16 @@
                     card.ondragend = handleDragEnd;
                 }
 
-                // Для impossible уровней добавляем WR, если есть
-                const wrHtml = item.wr ? `<div class="wr-box" onclick="copyText('${item.wr}')"><i class="fas fa-trophy"></i> ${t.wr}: ${item.wr}</div>` : '';
+                // Для impossible уровней добавляем WR, для future - estimatedPosition
+                const wrHtml = (type === 'impossible' && item.wr) ? `<div class="wr-box" onclick="copyText('${item.wr}')"><i class="fas fa-trophy"></i> ${t.wr}: ${item.wr}</div>` : '';
+                const estimatedHtml = (type === 'future' && item.estimatedPosition) ? `<div class="estimated-box"><i class="fas fa-map-marker-alt"></i> ${t.estimatedPosition}: ${item.estimatedPosition}</div>` : '';
 
                 card.innerHTML = `
                     ${isDeleteMode ? `
                     <div class="admin-controls">
                         <button class="ctrl-btn btn-up" onclick="moveItem('${item.key}', -1, '${type}')"><i class="fas fa-arrow-up"></i></button>
                         <button class="ctrl-btn btn-down" onclick="moveItem('${item.key}', 1, '${type}')"><i class="fas fa-arrow-down"></i></button>
-                        <button class="ctrl-btn btn-del" onclick="deleteItem('${item.key}', '${type === 'impossible' ? 'impossible' : type + 's'}')"><i class="fas fa-trash"></i></button>
+                        <button class="ctrl-btn btn-del" onclick="deleteItem('${item.key}', '${type === 'future' ? 'futureDemons' : (type === 'impossible' ? 'impossible' : type + 's')}')"><i class="fas fa-trash"></i></button>
                     </div>` : ''}
                     ${isDragDropMode && isAdmin ? `
                     <div style="position: absolute; top: 10px; left: 10px; background: rgba(102,252,241,0.2); padding:4px 8px; border-radius:5px; font-size:0.7rem; color:var(--accent-cyan); z-index:50;">
@@ -1775,6 +1830,7 @@
                         <p style="color:#aaa; margin:6px 0 15px;">by <span style="color:#fff">${escapeHtml(item.author)}</span></p>
                         <div class="level-id-box" onclick="copyID('${item.levelID || ''}')">${t.id}: ${item.levelID || 'N/A'}</div>
                         ${wrHtml}
+                        ${estimatedHtml}
                         <button class="btn-more" onclick="showInfoByKey('${item.key}', '${type}')">${t.details}</button>
                     </div>
                 `;
@@ -1788,6 +1844,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            else if (type === 'future') items = futureDemons;
             const index = items.findIndex(i => i.key === levelKey);
             return index === -1 ? Infinity : index + 1;
         }
@@ -1818,6 +1875,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            else if (type === 'future') items = futureDemons;
             else return;
 
             const oldIndex = draggedIndex;
@@ -1835,14 +1893,14 @@
             const updates = {};
             newItems.forEach((item, idx) => {
                 if (item.order !== idx) {
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${item.key}/order`] = idx;
+                    updates[`/${type === 'future' ? 'futureDemons' : (type === 'impossible' ? 'impossible' : type + 's')}/${item.key}/order`] = idx;
                 }
             });
 
             db.ref().update(updates).then(() => {
                 showToast('Порядок обновлён!');
                 logChange('move', levelName, levelKey, oldPos, newPos, type, newItems);
-                recalculatePlayerScoresForLevel(levelKey, type); // для impossible тоже, если нужно
+                recalculatePlayerScoresForLevel(levelKey, type); // для future тоже, если нужно
             });
             draggedIndex = -1;
         }
@@ -1858,6 +1916,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            else if (type === 'future') items = futureDemons;
             else return;
 
             const index = items.findIndex(i => i.key === key);
@@ -1871,8 +1930,8 @@
             const newPos = target + 1;
 
             const updates = {};
-            updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${items[index].key}/order`] = target;
-            updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${items[target].key}/order`] = index;
+            updates[`/${type === 'future' ? 'futureDemons' : (type === 'impossible' ? 'impossible' : type + 's')}/${items[index].key}/order`] = target;
+            updates[`/${type === 'future' ? 'futureDemons' : (type === 'impossible' ? 'impossible' : type + 's')}/${items[target].key}/order`] = index;
             db.ref().update(updates).then(() => {
                 recalculatePlayerScoresForLevel(levelKey, type);
             });
@@ -1891,6 +1950,9 @@
             } else if (path === 'impossible') {
                 const item = impossibleLevels.find(i => i.key === key);
                 if (item) { levelName = item.name; levelKey = item.key; oldPos = impossibleLevels.findIndex(i => i.key === key) + 1; type = 'impossible'; }
+            } else if (path === 'futureDemons') {
+                const item = futureDemons.find(i => i.key === key);
+                if (item) { levelName = item.name; levelKey = item.key; oldPos = futureDemons.findIndex(i => i.key === key) + 1; type = 'future'; }
             }
 
             db.ref(path + '/' + key).remove().then(() => {
@@ -1899,6 +1961,7 @@
                     if (type === 'demon') ref = db.ref('demons');
                     else if (type === 'challenge') ref = db.ref('challenges');
                     else if (type === 'impossible') ref = db.ref('impossible');
+                    else if (type === 'future') ref = db.ref('futureDemons');
                     ref.once('value', s => {
                         const newItems = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                         logChange('remove', levelName, levelKey, oldPos, null, type, newItems);
@@ -2058,6 +2121,7 @@
             if (type === 'demon') item = demons.find(x => x.key === key);
             else if (type === 'challenge') item = challenges.find(x => x.key === key);
             else if (type === 'impossible') item = impossibleLevels.find(x => x.key === key);
+            else if (type === 'future') item = futureDemons.find(x => x.key === key);
             if (!item) return;
 
             const t = translations[currentLang];
@@ -2067,14 +2131,19 @@
                     ${isDeleteMode ? `<i class="fas fa-times" style="color:#ff4d4d; cursor:pointer;" onclick="deleteVictor('${item.key}', '${vk}', '${type}')"></i>` : ''}
                 </div>`).join('') : `<p style='color:#888;'>${t.noRecords}</p>`;
 
-            // Для impossible добавляем WR в детали
-            const wrDetail = item.wr ? `
+            // Для impossible добавляем WR, для future - estimatedPosition
+            const wrDetail = (type === 'impossible' && item.wr) ? `
                 <div class="stat-item">
                     <div class="stat-label">${t.wr}</div>
                     <div class="stat-value copy-password">
                         ${item.wr}
                         <button onclick="copyText('${item.wr}')">${t.copy}</button>
                     </div>
+                </div>` : '';
+            const estimatedDetail = (type === 'future' && item.estimatedPosition) ? `
+                <div class="stat-item">
+                    <div class="stat-label">${t.estimatedPosition}</div>
+                    <div class="stat-value">${item.estimatedPosition}</div>
                 </div>` : '';
 
             const modalContent = `
@@ -2114,6 +2183,7 @@
                         <div class="stat-value">${item.score || '—'}</div>
                     </div>
                     ${wrDetail}
+                    ${estimatedDetail}
                 </div>
 
                 <h3 style="margin-bottom:12px; font-size:1.1rem; color: #fff;">${t.victors}</h3>
@@ -2134,7 +2204,12 @@
 
         function deleteVictor(itemKey, victorKey, type) {
             if (confirm('Удалить рекорд?')) {
-                db.ref(`${type === 'impossible' ? 'impossible' : type + 's'}/${itemKey}/victors/${victorKey}`).remove().then(() => {
+                let path = '';
+                if (type === 'demon') path = `demons/${itemKey}/victors/${victorKey}`;
+                else if (type === 'challenge') path = `challenges/${itemKey}/victors/${victorKey}`;
+                else if (type === 'impossible') path = `impossible/${itemKey}/victors/${victorKey}`;
+                else if (type === 'future') path = `futureDemons/${itemKey}/victors/${victorKey}`;
+                db.ref(path).remove().then(() => {
                     document.getElementById('detailModal').style.display = 'none';
                 });
             }
@@ -2146,6 +2221,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            else if (type === 'future') items = futureDemons;
             else return 0;
             const item = items.find(i => i.key === levelKey);
             if (!item) return 0;
@@ -2204,13 +2280,13 @@
             document.getElementById('fields_main').style.display = 'none';
             document.getElementById('fields_victor').style.display = 'none';
 
-            if (a === 'add_demon' || a === 'add_challenge' || a === 'add_impossible' || a === 'add_creator') {
+            if (a === 'add_demon' || a === 'add_challenge' || a === 'add_impossible' || a === 'add_future' || a === 'add_creator') {
                 document.getElementById('fields_main').style.display = 'block';
-                // Показываем/скрываем поле WR в зависимости от типа
+                // Показываем/скрываем поля в зависимости от типа
                 const wrField = document.getElementById('itemWR');
-                if (wrField) {
-                    wrField.style.display = (a === 'add_impossible') ? 'block' : 'none';
-                }
+                const estimatedField = document.getElementById('itemEstimatedPosition');
+                if (wrField) wrField.style.display = (a === 'add_impossible') ? 'block' : 'none';
+                if (estimatedField) estimatedField.style.display = (a === 'add_future') ? 'block' : 'none';
             } else if (a === 'add_victor' || a === 'add_challenge_victor') {
                 document.getElementById('fields_victor').style.display = 'block';
             } else if (a === 'moderate_records') {
@@ -2233,9 +2309,8 @@
             document.getElementById('itemVerifier').placeholder = t.verifierPlaceholder;
             document.getElementById('itemImgURL').placeholder = t.imgPlaceholder;
             document.getElementById('itemVid').placeholder = t.vidPlaceholder;
-            if (document.getElementById('itemWR')) {
-                document.getElementById('itemWR').placeholder = t.wrPlaceholder;
-            }
+            if (document.getElementById('itemWR')) document.getElementById('itemWR').placeholder = t.wrPlaceholder;
+            if (document.getElementById('itemEstimatedPosition')) document.getElementById('itemEstimatedPosition').placeholder = t.estimatedPositionPlaceholder;
             document.getElementById('itemPassword').placeholder = t.passwordPlaceholder;
             document.getElementById('itemLength').placeholder = t.lengthPlaceholder;
             document.getElementById('itemObjects').placeholder = t.objectsPlaceholder;
@@ -2260,6 +2335,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            else if (type === 'future') items = futureDemons;
             items.forEach(item => {
                 select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
             });
@@ -2277,6 +2353,7 @@
             if (type === 'demon') item = demons.find(d => d.key === key);
             else if (type === 'challenge') item = challenges.find(c => c.key === key);
             else if (type === 'impossible') item = impossibleLevels.find(i => i.key === key);
+            else if (type === 'future') item = futureDemons.find(f => f.key === key);
             if (item) {
                 document.getElementById('editName').value = item.name || '';
                 document.getElementById('editAuthor').value = item.author || '';
@@ -2286,6 +2363,7 @@
                 document.getElementById('editImgURL').value = item.img || '';
                 document.getElementById('editVid').value = item.vid || '';
                 document.getElementById('editWR').value = item.wr || '';
+                document.getElementById('editEstimatedPosition').value = item.estimatedPosition || '';
                 document.getElementById('editPassword').value = item.password || '';
                 document.getElementById('editLength').value = item.length || '';
                 document.getElementById('editObjects').value = item.objects || '';
@@ -2302,11 +2380,16 @@
             const name = document.getElementById('itemName').value;
             const val = document.getElementById('itemVal').value;
 
-            if (act === 'add_demon' || act === 'add_challenge' || act === 'add_impossible') {
+            if (act === 'add_demon' || act === 'add_challenge' || act === 'add_impossible' || act === 'add_future') {
                 let vid = extractVideoId(document.getElementById('itemVid').value);
                 const positionInput = document.getElementById('itemPosition').value;
                 let targetOrder;
-                let itemsList = (act === 'add_demon') ? demons : (act === 'add_challenge' ? challenges : impossibleLevels);
+                let itemsList;
+                if (act === 'add_demon') itemsList = demons;
+                else if (act === 'add_challenge') itemsList = challenges;
+                else if (act === 'add_impossible') itemsList = impossibleLevels;
+                else itemsList = futureDemons;
+
                 if (positionInput && !isNaN(parseInt(positionInput))) {
                     targetOrder = Math.max(0, parseInt(positionInput) - 1);
                 } else {
@@ -2317,7 +2400,12 @@
                 const updates = {};
                 itemsList.forEach(item => {
                     if (item.order >= targetOrder) {
-                        updates[`/${act === 'add_demon' ? 'demons' : act === 'add_challenge' ? 'challenges' : 'impossible'}/${item.key}/order`] = item.order + 1;
+                        let path = '';
+                        if (act === 'add_demon') path = `demons/${item.key}/order`;
+                        else if (act === 'add_challenge') path = `challenges/${item.key}/order`;
+                        else if (act === 'add_impossible') path = `impossible/${item.key}/order`;
+                        else path = `futureDemons/${item.key}/order`;
+                        updates[path] = item.order + 1;
                     }
                 });
 
@@ -2329,6 +2417,7 @@
                     img: document.getElementById('itemImgURL').value,
                     vid,
                     wr: document.getElementById('itemWR')?.value || '',
+                    estimatedPosition: document.getElementById('itemEstimatedPosition')?.value || '',
                     password: document.getElementById('itemPassword').value,
                     length: document.getElementById('itemLength').value,
                     objects: document.getElementById('itemObjects').value,
@@ -2337,7 +2426,11 @@
                     order: targetOrder
                 };
 
-                const refPath = act === 'add_demon' ? 'demons' : act === 'add_challenge' ? 'challenges' : 'impossible';
+                let refPath = '';
+                if (act === 'add_demon') refPath = 'demons';
+                else if (act === 'add_challenge') refPath = 'challenges';
+                else if (act === 'add_impossible') refPath = 'impossible';
+                else refPath = 'futureDemons';
 
                 db.ref().update(updates).then(() => {
                     db.ref(refPath).push(newItem).then((ref) => {
@@ -2345,7 +2438,12 @@
                             db.ref(refPath).once('value', s => {
                                 const newList = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                                 const newPos = newList.findIndex(x => x.name === name) + 1;
-                                logChange('place', name, ref.key, null, newPos, act === 'add_demon' ? 'demon' : act === 'add_challenge' ? 'challenge' : 'impossible', newList);
+                                let listType = '';
+                                if (act === 'add_demon') listType = 'demon';
+                                else if (act === 'add_challenge') listType = 'challenge';
+                                else if (act === 'add_impossible') listType = 'impossible';
+                                else listType = 'future';
+                                logChange('place', name, ref.key, null, newPos, listType, newList);
                             });
                         }, 500);
                     });
@@ -2402,6 +2500,7 @@
                 const img = document.getElementById('editImgURL').value.trim();
                 let vid = extractVideoId(document.getElementById('editVid').value);
                 const wr = document.getElementById('editWR').value.trim();
+                const estimatedPosition = document.getElementById('editEstimatedPosition').value.trim();
                 const password = document.getElementById('editPassword').value.trim();
                 const length = document.getElementById('editLength').value.trim();
                 const objects = document.getElementById('editObjects').value.trim();
@@ -2416,9 +2515,11 @@
                 }
 
                 let items = [];
-                if (type === 'demon') items = demons;
-                else if (type === 'challenge') items = challenges;
-                else if (type === 'impossible') items = impossibleLevels;
+                let refPath = '';
+                if (type === 'demon') { items = demons; refPath = 'demons'; }
+                else if (type === 'challenge') { items = challenges; refPath = 'challenges'; }
+                else if (type === 'impossible') { items = impossibleLevels; refPath = 'impossible'; }
+                else if (type === 'future') { items = futureDemons; refPath = 'futureDemons'; }
                 const oldItem = items.find(i => i.key === key);
                 if (!oldItem) return;
                 const oldOrder = oldItem.order;
@@ -2426,19 +2527,20 @@
 
                 if (newOrder === null || newOrder === oldOrder) {
                     const updates = {};
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/name`] = name || oldItem.name;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/author`] = author || oldItem.author;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/levelID`] = levelID || oldItem.levelID;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/tag`] = tag || oldItem.tag;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/verifier`] = verifier || oldItem.verifier;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/img`] = img || oldItem.img;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/vid`] = vid || oldItem.vid;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/wr`] = wr || oldItem.wr || '';
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/password`] = password || oldItem.password;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/length`] = length || oldItem.length;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/objects`] = objects || oldItem.objects;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/version`] = version || oldItem.version;
-                    updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/score`] = score || oldItem.score;
+                    updates[`/${refPath}/${key}/name`] = name || oldItem.name;
+                    updates[`/${refPath}/${key}/author`] = author || oldItem.author;
+                    updates[`/${refPath}/${key}/levelID`] = levelID || oldItem.levelID;
+                    updates[`/${refPath}/${key}/tag`] = tag || oldItem.tag;
+                    updates[`/${refPath}/${key}/verifier`] = verifier || oldItem.verifier;
+                    updates[`/${refPath}/${key}/img`] = img || oldItem.img;
+                    updates[`/${refPath}/${key}/vid`] = vid || oldItem.vid;
+                    if (type === 'impossible') updates[`/${refPath}/${key}/wr`] = wr || oldItem.wr || '';
+                    if (type === 'future') updates[`/${refPath}/${key}/estimatedPosition`] = estimatedPosition || oldItem.estimatedPosition || '';
+                    updates[`/${refPath}/${key}/password`] = password || oldItem.password;
+                    updates[`/${refPath}/${key}/length`] = length || oldItem.length;
+                    updates[`/${refPath}/${key}/objects`] = objects || oldItem.objects;
+                    updates[`/${refPath}/${key}/version`] = version || oldItem.version;
+                    updates[`/${refPath}/${key}/score`] = score || oldItem.score;
                     db.ref().update(updates).then(() => {
                         alert('Уровень обновлён');
                         if (score !== oldScore) {
@@ -2458,27 +2560,28 @@
                 const updates = {};
                 newItems.forEach((item, idx) => {
                     if (item.order !== idx) {
-                        updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${item.key}/order`] = idx;
+                        updates[`/${refPath}/${item.key}/order`] = idx;
                     }
                 });
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/name`] = name || oldItem.name;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/author`] = author || oldItem.author;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/levelID`] = levelID || oldItem.levelID;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/tag`] = tag || oldItem.tag;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/verifier`] = verifier || oldItem.verifier;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/img`] = img || oldItem.img;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/vid`] = vid || oldItem.vid;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/wr`] = wr || oldItem.wr || '';
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/password`] = password || oldItem.password;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/length`] = length || oldItem.length;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/objects`] = objects || oldItem.objects;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/version`] = version || oldItem.version;
-                updates[`/${type === 'impossible' ? 'impossible' : type + 's'}/${key}/score`] = score || oldItem.score;
+                updates[`/${refPath}/${key}/name`] = name || oldItem.name;
+                updates[`/${refPath}/${key}/author`] = author || oldItem.author;
+                updates[`/${refPath}/${key}/levelID`] = levelID || oldItem.levelID;
+                updates[`/${refPath}/${key}/tag`] = tag || oldItem.tag;
+                updates[`/${refPath}/${key}/verifier`] = verifier || oldItem.verifier;
+                updates[`/${refPath}/${key}/img`] = img || oldItem.img;
+                updates[`/${refPath}/${key}/vid`] = vid || oldItem.vid;
+                if (type === 'impossible') updates[`/${refPath}/${key}/wr`] = wr || oldItem.wr || '';
+                if (type === 'future') updates[`/${refPath}/${key}/estimatedPosition`] = estimatedPosition || oldItem.estimatedPosition || '';
+                updates[`/${refPath}/${key}/password`] = password || oldItem.password;
+                updates[`/${refPath}/${key}/length`] = length || oldItem.length;
+                updates[`/${refPath}/${key}/objects`] = objects || oldItem.objects;
+                updates[`/${refPath}/${key}/version`] = version || oldItem.version;
+                updates[`/${refPath}/${key}/score`] = score || oldItem.score;
 
                 db.ref().update(updates).then(() => {
                     alert('Уровень обновлён и перемещён');
                     setTimeout(() => {
-                        db.ref(type === 'impossible' ? 'impossible' : type + 's').once('value', s => {
+                        db.ref(refPath).once('value', s => {
                             const newList = s.val() ? Object.entries(s.val()).map(([k, d]) => ({ key: k, ...d })).sort((a,b)=> (a.order||0) - (b.order||0)) : [];
                             logChange('move', name, key, oldOrder+1, newOrder+1, type, newList);
                         });
@@ -2667,7 +2770,10 @@
                     const rec = child.val();
                     if (rec.status === 'pending') {
                         hasPending = true;
-                        const typeDisplay = rec.itemType === 'challenge' ? t.radioChallenge : (rec.itemType === 'impossible' ? t.radioImpossible : t.radioDemon);
+                        let typeDisplay = '';
+                        if (rec.itemType === 'challenge') typeDisplay = t.radioChallenge;
+                        else if (rec.itemType === 'impossible') typeDisplay = t.radioImpossible;
+                        else typeDisplay = t.radioDemon;
                         const item = document.createElement('div');
                         item.className = 'moderation-item';
                         item.innerHTML = `
@@ -2737,7 +2843,7 @@
                                     player.hardestChallenge = { levelKey, levelName };
                                 }
                             }
-                            // Для impossible не обновляем hardest, но очки добавляются
+                            // Для impossible и future не обновляем hardest, но очки добавляются
                         }
                         return playersRef.child(nickname).set(player);
                     });
@@ -2778,7 +2884,7 @@
                 playersList.forEach((player, index) => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>#${index + 1}</td>
+                         <td>#${index + 1}</td>
                         <td class="clickable" onclick="openPlayerProfile('${player.nick}')">${escapeHtml(player.nick)}</td>
                         <td>${player.score.toFixed(2)}</td>
                         <td>${escapeHtml(player.hardestDemon)}</td>
@@ -2821,12 +2927,17 @@
                     <div class="player-records">
                         <h3>${t.unbounded}</h3>
                         <ul class="records-list">
-                            ${recordsList.map(rec => `
+                            ${recordsList.map(rec => {
+                                let typeLabel = '';
+                                if (rec.type === 'challenge') typeLabel = t.radioChallenge;
+                                else if (rec.type === 'impossible') typeLabel = t.radioImpossible;
+                                else typeLabel = t.radioDemon;
+                                return `
                                 <li>
-                                    <span class="clickable-level" onclick="showInfoByKey('${rec.levelKey}', '${rec.type}')">${escapeHtml(rec.levelName)}</span> (${rec.type === 'challenge' ? t.radioChallenge : (rec.type === 'impossible' ? t.radioImpossible : t.radioDemon)})
+                                    <span class="clickable-level" onclick="showInfoByKey('${rec.levelKey}', '${rec.type}')">${escapeHtml(rec.levelName)}</span> (${typeLabel})
                                     <span class="level-percent">${rec.percent}%</span>
-                                </li>
-                            `).join('')}
+                                </li>`;
+                            }).join('')}
                         </ul>
                     </div>
                 `;
@@ -2844,6 +2955,7 @@
             if (type === 'demon') items = demons;
             else if (type === 'challenge') items = challenges;
             else if (type === 'impossible') items = impossibleLevels;
+            // future не добавляем, так как для него подача рекордов не предусмотрена
             items.forEach(item => {
                 select.innerHTML += `<option value="${item.key}">${escapeHtml(item.name)} by ${escapeHtml(item.author)}</option>`;
             });
@@ -2923,7 +3035,7 @@
                 const t = translations[currentLang];
                 container.innerHTML = '';
                 records.forEach(rec => {
-                    let typeDisplay;
+                    let typeDisplay = '';
                     if (rec.itemType === 'challenge') typeDisplay = t.radioChallenge;
                     else if (rec.itemType === 'impossible') typeDisplay = t.radioImpossible;
                     else typeDisplay = t.radioDemon;
